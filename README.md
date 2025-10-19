@@ -20,9 +20,12 @@ Repository secrets needed:
 ## Manual deploy
 
 ```bash
-cloudflared access ssh --hostname ssh.adolago.xyz --service-token-id "$CF_ACCESS_CLIENT_ID" --service-token-secret "$CF_ACCESS_CLIENT_SECRET"
-rsync -avz --delete --exclude '.git/' --exclude '.github/' --exclude '.gitignore' . deploy@ssh.adolago.xyz:/srv/www/adolago/
-ssh deploy@ssh.adolago.xyz sudo systemctl reload caddy
+cloudflared access tcp --hostname ssh.adolago.xyz --url localhost:2222 \
+  --service-token-id "$CF_ACCESS_CLIENT_ID" --service-token-secret "$CF_ACCESS_CLIENT_SECRET" &
+PID=$!
+rsync -avz --delete --exclude '.git/' --exclude '.github/' --exclude '.gitignore' . deploy@localhost:/srv/www/adolago/ -e 'ssh -p 2222'
+ssh -p 2222 deploy@localhost sudo systemctl reload caddy
+kill $PID
 ```
 
 ## Notes
