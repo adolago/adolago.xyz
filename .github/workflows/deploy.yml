@@ -41,7 +41,6 @@ jobs:
             HostName localhost
             Port 2222
             User deploy
-            IdentitiesOnly yes
             StrictHostKeyChecking no
             UserKnownHostsFile /dev/null
           EOF
