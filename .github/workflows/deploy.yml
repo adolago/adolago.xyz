@@ -41,7 +41,6 @@ jobs:
             HostName localhost
             Port 2222
             User deploy
-            IdentityFile ~/.ssh/id_ed25519
             IdentitiesOnly yes
             StrictHostKeyChecking no
             UserKnownHostsFile /dev/null
