@@ -59,7 +59,7 @@ jobs:
             --exclude '.git' \
             --exclude '.github' \
             --exclude '.gitignore' \
-            . | ssh dmz-gateway 'rm -rf /srv/www/adolago && mkdir -p /srv/www/adolago && tar xzf - -C /srv/www/adolago'
+            . | ssh dmz-gateway 'mkdir -p /srv/www/adolago && find /srv/www/adolago -mindepth 1 -delete && tar xzf - -C /srv/www/adolago'
 
       - name: Reload Caddy
         run: |
