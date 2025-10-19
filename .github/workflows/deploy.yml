@@ -30,7 +30,7 @@ jobs:
             --hostname ssh.adolago.xyz \
             --service-token-id "$CF_ACCESS_CLIENT_ID" \
             --service-token-secret "$CF_ACCESS_CLIENT_SECRET" \
-            --command "rsync -avz --delete --exclude '.git/' --exclude '.github/' --exclude '.gitignore' ./ /srv/www/adolago/"
+            -- rsync -avz --delete --exclude '.git/' --exclude '.github/' --exclude '.gitignore' ./ deploy@ssh.adolago.xyz:/srv/www/adolago/
 
       - name: Reload Caddy
         run: |
@@ -38,4 +38,4 @@ jobs:
             --hostname ssh.adolago.xyz \
             --service-token-id "$CF_ACCESS_CLIENT_ID" \
             --service-token-secret "$CF_ACCESS_CLIENT_SECRET" \
-            --command "sudo systemctl reload caddy"
+            -- ssh deploy@ssh.adolago.xyz 'sudo systemctl reload caddy'
