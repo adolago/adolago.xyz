@@ -63,7 +63,7 @@ jobs:
 
       - name: Reload Caddy
         run: |
-          ssh dmz-gateway 'sudo systemctl reload caddy'
+          ssh dmz-gateway 'sudo systemctl restart caddy'
 
       - name: Stop Cloudflare Access tunnel
         if: always()
