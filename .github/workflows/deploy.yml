@@ -37,15 +37,15 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           cat <<'EOF' >> ~/.ssh/config
-Host dmz-gateway
-  HostName localhost
-  Port 2222
-  User deploy
-  IdentityFile ~/.ssh/id_ed25519
-  IdentitiesOnly yes
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
-EOF
+          Host dmz-gateway
+            HostName localhost
+            Port 2222
+            User deploy
+            IdentityFile ~/.ssh/id_ed25519
+            IdentitiesOnly yes
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+          EOF
 
       - name: Rsync static site
         run: |
