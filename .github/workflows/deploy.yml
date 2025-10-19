@@ -24,18 +24,42 @@ jobs:
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
           sudo dpkg -i cloudflared.deb
 
+      - name: Start Cloudflare Access tunnel
+        run: |
+          cloudflared access tcp \
+            --hostname ssh.adolago.xyz \
+            --destination localhost:22 \
+            --url localhost:2222 \
+            --service-token-id "$CF_ACCESS_CLIENT_ID" \
+            --service-token-secret "$CF_ACCESS_CLIENT_SECRET" &
+          echo $! > cloudflared.pid
+
+      - name: Configure SSH client
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' \
+            'Host dmz-gateway' \
+            '  HostName localhost' \
+            '  Port 2222' \
+            '  User deploy' \
+            '  IdentitiesOnly yes' \
+            '  IdentityAgent '${SSH_AUTH_SOCK} \
+            '  StrictHostKeyChecking no' \
+            '  UserKnownHostsFile /dev/null' >> ~/.ssh/config
+
       - name: Rsync static site
         run: |
-          cloudflared access ssh \
-            --hostname ssh.adolago.xyz \
-            --service-token-id "$CF_ACCESS_CLIENT_ID" \
-            --service-token-secret "$CF_ACCESS_CLIENT_SECRET" \
-            -- rsync -avz --delete --exclude '.git/' --exclude '.github/' --exclude '.gitignore' ./ deploy@ssh.adolago.xyz:/srv/www/adolago/
+          rsync -avz --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.gitignore' \
+            ./ dmz-gateway:/srv/www/adolago/
 
       - name: Reload Caddy
         run: |
-          cloudflared access ssh \
-            --hostname ssh.adolago.xyz \
-            --service-token-id "$CF_ACCESS_CLIENT_ID" \
-            --service-token-secret "$CF_ACCESS_CLIENT_SECRET" \
-            -- ssh deploy@ssh.adolago.xyz 'sudo systemctl reload caddy'
+          ssh dmz-gateway 'sudo systemctl reload caddy'
+
+      - name: Stop Cloudflare Access tunnel
+        if: always()
+        run: |
+          if [ -f cloudflared.pid ]; then kill $(cat cloudflared.pid); fi
