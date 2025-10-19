@@ -53,13 +53,13 @@ jobs:
             '  StrictHostKeyChecking no' \
             '  UserKnownHostsFile /dev/null' >> ~/.ssh/config
 
-      - name: Rsync static site
+      - name: Upload site payload
         run: |
-          rsync -avz --delete \
-            --exclude '.git/' \
-            --exclude '.github/' \
+          tar -czf - \
+            --exclude '.git' \
+            --exclude '.github' \
             --exclude '.gitignore' \
-            ./ dmz-gateway:/srv/www/adolago/
+            . | ssh dmz-gateway 'sudo rm -rf /srv/www/adolago/* && sudo tar xzf - -C /srv/www/adolago'
 
       - name: Reload Caddy
         run: |
