@@ -8,23 +8,35 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+      CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Join Tailscale
-        uses: tailscale/github-action@v1
-        with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
 
       - name: Add deploy key
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.DMZ_GATEWAY_SSH_KEY }}
 
-      - name: Trust dmz-gateway host key
+      - name: Install cloudflared
+        run: |
+          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
+          sudo dpkg -i cloudflared.deb
+
+      - name: Configure SSH for Cloudflare Access
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          cat <<'EOF' >> ~/.ssh/config
+Host dmz-gateway
+  HostName ssh.adolago.xyz
+  User deploy
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  ProxyCommand cloudflared access ssh --hostname %h
+EOF
 
       - name: Rsync static site
         run: |
@@ -32,8 +44,8 @@ jobs:
             --exclude '.git/' \
             --exclude '.github/' \
             --exclude '.gitignore' \
-            . "deploy@${{ secrets.DEPLOY_HOST }}:/srv/www/adolago/"
+            ./ dmz-gateway:/srv/www/adolago/
 
       - name: Reload Caddy
         run: |
-          ssh "deploy@${{ secrets.DEPLOY_HOST }}" 'sudo systemctl reload caddy'
+          ssh dmz-gateway 'sudo systemctl reload caddy'
