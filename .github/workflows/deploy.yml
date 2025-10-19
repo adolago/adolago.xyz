@@ -36,16 +36,15 @@ jobs:
       - name: Configure SSH client
         run: |
           mkdir -p ~/.ssh
-          cat <<EOF >> ~/.ssh/config
-  Host dmz-gateway
-  HostName localhost
-  Port 2222
-  User deploy
-  IdentitiesOnly yes
-  IdentityAgent $SSH_AUTH_SOCK
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
-EOF
+          printf '%s\n' \
+            'Host dmz-gateway' \
+            '  HostName localhost' \
+            '  Port 2222' \
+            '  User deploy' \
+            "  IdentityAgent $SSH_AUTH_SOCK" \
+            '  IdentitiesOnly yes' \
+            '  StrictHostKeyChecking no' \
+            '  UserKnownHostsFile /dev/null' >> ~/.ssh/config
 
       - name: Rsync static site
         run: |
