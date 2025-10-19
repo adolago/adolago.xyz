@@ -24,41 +24,18 @@ jobs:
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
           sudo dpkg -i cloudflared.deb
 
-      - name: Start Cloudflare Access tunnel
-        run: |
-          cloudflared access tcp \
-            --hostname ssh.adolago.xyz \
-            --url localhost:2222 \
-            --service-token-id "$CF_ACCESS_CLIENT_ID" \
-            --service-token-secret "$CF_ACCESS_CLIENT_SECRET" &
-          echo $! > cloudflared.pid
-
-      - name: Configure SSH client
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' \
-            'Host dmz-gateway' \
-            '  HostName localhost' \
-            '  Port 2222' \
-            '  User deploy' \
-            "  IdentityAgent $SSH_AUTH_SOCK" \
-            '  IdentitiesOnly yes' \
-            '  StrictHostKeyChecking no' \
-            '  UserKnownHostsFile /dev/null' >> ~/.ssh/config
-
       - name: Rsync static site
         run: |
-          rsync -avz --delete \
-            --exclude '.git/' \
-            --exclude '.github/' \
-            --exclude '.gitignore' \
-            ./ dmz-gateway:/srv/www/adolago/
+          cloudflared access ssh \
+            --hostname ssh.adolago.xyz \
+            --service-token-id "$CF_ACCESS_CLIENT_ID" \
+            --service-token-secret "$CF_ACCESS_CLIENT_SECRET" \
+            --command "rsync -avz --delete --exclude '.git/' --exclude '.github/' --exclude '.gitignore' ./ /srv/www/adolago/"
 
       - name: Reload Caddy
         run: |
-          ssh dmz-gateway 'sudo systemctl reload caddy'
-
-      - name: Stop Cloudflare Access tunnel
-        if: always()
-        run: |
-          if [ -f cloudflared.pid ]; then kill $(cat cloudflared.pid); fi
+          cloudflared access ssh \
+            --hostname ssh.adolago.xyz \
+            --service-token-id "$CF_ACCESS_CLIENT_ID" \
+            --service-token-secret "$CF_ACCESS_CLIENT_SECRET" \
+            --command "sudo systemctl reload caddy"
