@@ -1,0 +1,39 @@
+name: Deploy adolago.xyz
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Join Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: Add deploy key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DMZ_GATEWAY_SSH_KEY }}
+
+      - name: Trust dmz-gateway host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Rsync static site
+        run: |
+          rsync -avz --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.gitignore' \
+            . "deploy@${{ secrets.DEPLOY_HOST }}:/srv/www/adolago/"
+
+      - name: Reload Caddy
+        run: |
+          ssh "deploy@${{ secrets.DEPLOY_HOST }}" 'sudo systemctl reload caddy'
