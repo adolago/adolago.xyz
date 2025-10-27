@@ -69,7 +69,7 @@ jobs:
         run: |
           # Wait for server to settle and respond with the new page content
           for i in {1..30}; do
-            if curl -s -L https://adolago.xyz/ | grep -qi 'System Console'; then
+            if curl -s -L https://adolago.xyz/ | grep -qi 'Artur Andrade Do Lago'; then
               echo "Site online and content verified"; exit 0; fi
             sleep 2
           done
