@@ -79,26 +79,7 @@
       border-color:var(--accent);
     }
 
-    .image-gallery{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:8px;
-      margin-top:24px;
-    }
-
-    .image-gallery img{
-      width:100%;
-      height:120px;
-      object-fit:cover;
-      border:1px solid var(--line);
-      opacity:0.7;
-      transition:opacity 0.3s ease, border-color 0.3s ease;
-    }
-
-    .image-gallery img:hover{
-      opacity:1;
-      border-color:var(--accent);
-    }
+    
 
     /* Motion preferences ------------------------------------------------- */
     @media (prefers-reduced-motion: reduce){
@@ -108,7 +89,6 @@
     /* Responsiveness ----------------------------------------------------- */
     @media (max-width: 480px){
       .console{padding:24px;}
-      .image-gallery{grid-template-columns:1fr;}
     }
   </style>
   <meta name="description" content="Adolago - developer, creator, thinker" />
@@ -129,12 +109,7 @@
       <a href="#" class="link">writing</a>
     </div>
 
-    <div class="image-gallery">
-      <img src="WhatsApp Image 2025-10-27 at 08.31.37.jpeg" alt="">
-      <img src="WhatsApp Image 2025-10-27 at 08.31.37 (1).jpeg" alt="">
-      <img src="WhatsApp Image 2025-10-27 at 08.31.37 (2).jpeg" alt="">
-      <img src="WhatsApp Image 2025-10-27 at 08.31.37 (3).jpeg" alt="">
-    </div>
+    
   </main>
 </body>
 </html>
