@@ -47,7 +47,7 @@ jobs:
             'Host dmz-gateway' \
             '  HostName localhost' \
             '  Port 2222' \
-            '  User deploy' \
+            '  User artur' \
             '  IdentityFile ~/.ssh/deploy_key' \
             '  IdentitiesOnly yes' \
             '  StrictHostKeyChecking no' \
@@ -59,11 +59,15 @@ jobs:
             --exclude '.git' \
             --exclude '.github' \
             --exclude '.gitignore' \
-            . | ssh dmz-gateway 'mkdir -p /srv/www/adolago && find /srv/www/adolago -mindepth 1 -delete && tar xzf - -C /srv/www/adolago'
+            . | ssh dmz-gateway 'sudo tar xzf - -C /var/www/html --strip-components=0'
+
+      - name: Set permissions
+        run: |
+          ssh dmz-gateway 'sudo chown -R caddy:caddy /var/www/html'
 
       - name: Reload Caddy
         run: |
-          ssh dmz-gateway 'sudo systemctl restart caddy'
+          ssh dmz-gateway 'sudo systemctl reload caddy'
 
       - name: Health check (adolago.xyz)
         run: |
