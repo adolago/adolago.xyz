@@ -1,3 +1,6 @@
 node_modules/
 dist/
 .DS_Store
+
+# Personal content - copy index.html.example to index.html and customize
+index.html

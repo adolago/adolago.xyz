@@ -1,9 +1,15 @@
-name: Deploy adolago.xyz
+name: Deploy Website
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
+# CUSTOMIZE: Set these in your repository's Variables settings
+# Settings > Secrets and variables > Actions > Variables
+#   SITE_DOMAIN: your-domain.com
+#   SSH_HOSTNAME: ssh.your-domain.com
+#   DEPLOY_USER: deploy
 
 jobs:
   deploy:
@@ -11,6 +17,9 @@ jobs:
     env:
       CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
       CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+      SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
+      SSH_HOSTNAME: ${{ vars.SSH_HOSTNAME }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER || 'deploy' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -33,7 +42,7 @@ jobs:
       - name: Start Cloudflare Access tunnel
         run: |
           cloudflared access tcp \
-            --hostname ssh.adolago.xyz \
+            --hostname "$SSH_HOSTNAME" \
             --destination localhost:22 \
             --url localhost:2222 \
             --service-token-id "$CF_ACCESS_CLIENT_ID" \
@@ -47,7 +56,7 @@ jobs:
             'Host dmz-gateway' \
             '  HostName localhost' \
             '  Port 2222' \
-            '  User artur' \
+            "  User $DEPLOY_USER" \
             '  IdentityFile ~/.ssh/deploy_key' \
             '  IdentitiesOnly yes' \
             '  StrictHostKeyChecking no' \
@@ -59,6 +68,7 @@ jobs:
             --exclude '.git' \
             --exclude '.github' \
             --exclude '.gitignore' \
+            --exclude '*.example' \
             . | ssh dmz-gateway 'sudo tar xzf - -C /var/www/html --strip-components=0'
 
       - name: Set permissions
@@ -69,12 +79,12 @@ jobs:
         run: |
           ssh dmz-gateway 'sudo systemctl reload caddy'
 
-      - name: Health check (adolago.xyz)
+      - name: Health check
         run: |
-          # Wait for server to settle and respond with the new page content
+          # Wait for server to respond
           for i in {1..30}; do
-            if curl -s -L https://adolago.xyz/ | grep -qi 'Artur Do Lago'; then
-              echo "Site online and content verified"; exit 0; fi
+            if curl -sf -L "https://$SITE_DOMAIN/" > /dev/null; then
+              echo "Site online at https://$SITE_DOMAIN"; exit 0; fi
             sleep 2
           done
           echo "Site did not become reachable in time" >&2; exit 1

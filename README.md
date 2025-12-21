@@ -1,35 +1,89 @@
-# adolago.xyz
+# Personal Website Template
 
-Static site served from `dmz-gateway` via Cloudflare Tunnel.
+Minimal static site with Cloudflare Tunnel deployment. Terminal aesthetic, dark theme, single HTML file.
 
-## CI/CD workflow
+## Quick Start
+
+1. Copy the template: `cp index.html.example index.html`
+2. Edit `index.html` with your info
+3. Configure GitHub secrets (see below)
+4. Push to deploy
+
+## Features
+
+- Single-file site (HTML + inline CSS)
+- Dark terminal aesthetic with scanline effect
+- Respects `prefers-reduced-motion`
+- Mobile responsive
+- No build step required
+
+## CI/CD Workflow
 
 `.github/workflows/deploy.yml` performs:
 
-1. Checkout repository.
-2. Load the deploy SSH key (`DMZ_GATEWAY_SSH_KEY`).
-3. Install `cloudflared` and configure SSH to proxy through Cloudflare Access.
-4. Upload the repository payload (excluding Git metadata) via a `tar` stream to `/srv/www/adolago` on `dmz-gateway` and replace previous contents.
-5. Restart Caddy (`sudo systemctl restart caddy`).
-6. Health‑check `https://adolago.xyz` until it responds (< 400).
+1. Checkout repository
+2. Load deploy SSH key via Cloudflare Access tunnel
+3. Upload site files to server via tar stream
+4. Restart Caddy web server
+5. Health-check the site
 
-Repository secrets needed:
-- `DMZ_GATEWAY_SSH_KEY` – private key allowed on `/home/deploy/.ssh/authorized_keys`.
-- `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` – Cloudflare Access service token for the SSH application.
-- `DEPLOY_HOST` – retained for reference (`100.81.223.14`).
+### Required GitHub Configuration
 
-## Manual deploy
+**Variables** (Settings > Secrets and variables > Actions > Variables):
+
+| Variable | Description |
+|----------|-------------|
+| `SITE_DOMAIN` | Your domain (e.g., `example.com`) |
+| `SSH_HOSTNAME` | Cloudflare tunnel SSH hostname (e.g., `ssh.example.com`) |
+| `DEPLOY_USER` | SSH user on server (default: `deploy`) |
+
+**Secrets** (Settings > Secrets and variables > Actions > Secrets):
+
+| Secret | Description |
+|--------|-------------|
+| `DMZ_GATEWAY_SSH_KEY` | Private SSH key for deploy user |
+| `CF_ACCESS_CLIENT_ID` | Cloudflare Access service token ID |
+| `CF_ACCESS_CLIENT_SECRET` | Cloudflare Access service token secret |
+
+### Server Setup
+
+Your server needs:
+- Caddy (or nginx) serving static files
+- Cloudflare Tunnel configured
+- Deploy user with SSH access and sudo for Caddy restart
+
+## Manual Deploy
 
 ```bash
-cloudflared access tcp --hostname ssh.adolago.xyz --url localhost:2222 \
+# Start Cloudflare tunnel
+cloudflared access tcp --hostname ssh.your-domain.com --url localhost:2222 \
   --service-token-id "$CF_ACCESS_CLIENT_ID" --service-token-secret "$CF_ACCESS_CLIENT_SECRET" &
 PID=$!
-rsync -avz --delete --exclude '.git/' --exclude '.github/' --exclude '.gitignore' . deploy@localhost:/srv/www/adolago/ -e 'ssh -p 2222'
+
+# Sync files
+rsync -avz --delete --exclude '.git/' --exclude '.github/' --exclude '.gitignore' \
+  . deploy@localhost:/srv/www/site/ -e 'ssh -p 2222'
+
+# Reload server
 ssh -p 2222 deploy@localhost sudo systemctl restart caddy
 kill $PID
 ```
 
-## Notes
+## Local Development
 
-- Guest LAN is isolated from the main LAN; management runs over Cloudflare Access.
-- Cloudflare tunnel `adolago-prod` proxies both apex (`adolago.xyz`) and `www`.
+Just open `index.html` in a browser. No server needed.
+
+## Customization
+
+Edit the CSS variables in `:root` to change the theme:
+
+```css
+:root {
+  --bg: #0a0a0a;      /* Background */
+  --panel: #0b0b0b;   /* Card background */
+  --line: #202020;    /* Borders */
+  --text: #eaeaea;    /* Main text */
+  --muted: #b5b5b5;   /* Secondary text */
+  --accent: #f5f5f5;  /* Hover states */
+}
+```

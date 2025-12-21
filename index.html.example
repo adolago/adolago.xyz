@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>adolago.xyz</title>
+  <title>your-domain.xyz</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root {
@@ -116,7 +116,7 @@
       }
     }
   </style>
-  <meta name="description" content="Adolago — developer, creator, thinker" />
+  <meta name="description" content="Your Name — your tagline here" />
   <meta name="theme-color" content="#0a0a0a" />
   <link rel="icon"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='2' fill='black'/%3E%3Cpath d='M3 11h10M3 8h10M3 5h6' stroke='white' stroke-width='1'/%3E%3C/svg%3E" />
@@ -124,19 +124,17 @@
 
 <body>
   <main class="console">
-    <h1 class="name">Artur Do Lago</h1>
+    <h1 class="name">Your Name</h1>
     <p class="bio">
-      Insatiable curiosity about how complex systems work. From mechanical devices to equity research and the financial
-      markets to technology infrastructure.
+      Your bio goes here. Describe what you do, what interests you,
+      or whatever you want visitors to know about you.
     </p>
 
     <div class="links">
-      <a href="https://github.com/adolago" class="link">GitHub</a>
-      <a href="mailto:dolagoartur@gmail.com" class="link">email</a>
+      <a href="https://github.com/your-username" class="link">GitHub</a>
+      <a href="mailto:you@example.com" class="link">email</a>
       <a href="#" class="link">writing</a>
     </div>
-
-
   </main>
 </body>
 
