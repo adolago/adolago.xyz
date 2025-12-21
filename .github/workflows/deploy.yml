@@ -40,28 +40,27 @@ jobs:
           printf '%s\n' "${{ secrets.DMZ_GATEWAY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
+      - name: Start Cloudflare Access tunnel
+        run: |
+          cloudflared access tcp \
+            --hostname "$SSH_HOSTNAME" \
+            --url localhost:2222 &
+          echo $! > /tmp/cloudflared.pid
+          # Wait for tunnel to establish
+          sleep 5
+
       - name: Configure SSH client
         run: |
           mkdir -p ~/.ssh
-          # Write credentials to a sourced file
-          printf 'export CF_ACCESS_CLIENT_ID="%s"\nexport CF_ACCESS_CLIENT_SECRET="%s"\n' \
-            "$CF_ACCESS_CLIENT_ID" "$CF_ACCESS_CLIENT_SECRET" > /tmp/cf-creds.env
-          # Create wrapper script
-          printf '%s\n' \
-            '#!/bin/bash' \
-            'source /tmp/cf-creds.env' \
-            'exec cloudflared access ssh --hostname "$1"' > /tmp/cf-ssh-proxy.sh
-          chmod +x /tmp/cf-ssh-proxy.sh
-          # Write SSH config
           printf '%s\n' \
             'Host dmz-gateway' \
-            "  HostName $SSH_HOSTNAME" \
+            '  HostName localhost' \
+            '  Port 2222' \
             "  User $DEPLOY_USER" \
             '  IdentityFile ~/.ssh/deploy_key' \
             '  IdentitiesOnly yes' \
             '  StrictHostKeyChecking no' \
-            '  UserKnownHostsFile /dev/null' \
-            '  ProxyCommand /tmp/cf-ssh-proxy.sh %h' >> ~/.ssh/config
+            '  UserKnownHostsFile /dev/null' >> ~/.ssh/config
 
       - name: Upload site payload
         run: |
@@ -90,3 +89,7 @@ jobs:
           done
           echo "Site did not become reachable in time" >&2; exit 1
 
+      - name: Stop Cloudflare Access tunnel
+        if: always()
+        run: |
+          if [ -f /tmp/cloudflared.pid ]; then kill $(cat /tmp/cloudflared.pid) 2>/dev/null || true; fi
