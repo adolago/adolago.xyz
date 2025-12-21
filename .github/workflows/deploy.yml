@@ -44,7 +44,9 @@ jobs:
         run: |
           cloudflared access tcp \
             --hostname "$SSH_HOSTNAME" \
-            --url localhost:2222 &
+            --url localhost:2222 \
+            --service-token-id "$CF_ACCESS_CLIENT_ID" \
+            --service-token-secret "$CF_ACCESS_CLIENT_SECRET" &
           echo $! > /tmp/cloudflared.pid
           # Wait for tunnel to establish
           sleep 5
