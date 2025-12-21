@@ -15,11 +15,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
-      CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+      CLOUDFLARE_TUNNEL_CREDENTIAL_FILE: /dev/null
       SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
       SSH_HOSTNAME: ${{ vars.SSH_HOSTNAME }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER || 'deploy' }}
+      CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+      CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,6 +43,15 @@ jobs:
       - name: Configure SSH client
         run: |
           mkdir -p ~/.ssh
+          # Create wrapper script that sets cloudflared env vars
+          cat > /tmp/cf-ssh-proxy.sh << EOF
+          #!/bin/bash
+          export CF_ACCESS_CLIENT_ID='$CF_ACCESS_CLIENT_ID'
+          export CF_ACCESS_CLIENT_SECRET='$CF_ACCESS_CLIENT_SECRET'
+          exec cloudflared access ssh --hostname "\$1"
+          EOF
+          chmod +x /tmp/cf-ssh-proxy.sh
+          # Write SSH config
           printf '%s\n' \
             'Host dmz-gateway' \
             "  HostName $SSH_HOSTNAME" \
@@ -50,7 +60,7 @@ jobs:
             '  IdentitiesOnly yes' \
             '  StrictHostKeyChecking no' \
             '  UserKnownHostsFile /dev/null' \
-            "  ProxyCommand cloudflared access ssh --hostname %h --service-token-id $CF_ACCESS_CLIENT_ID --service-token-secret $CF_ACCESS_CLIENT_SECRET" >> ~/.ssh/config
+            '  ProxyCommand /tmp/cf-ssh-proxy.sh %h' >> ~/.ssh/config
 
       - name: Upload site payload
         run: |
