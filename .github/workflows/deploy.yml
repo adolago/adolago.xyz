@@ -39,28 +39,18 @@ jobs:
           printf '%s\n' "${{ secrets.DMZ_GATEWAY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-      - name: Start Cloudflare Access tunnel
-        run: |
-          cloudflared access tcp \
-            --hostname "$SSH_HOSTNAME" \
-            --destination localhost:22 \
-            --url localhost:2222 \
-            --service-token-id "$CF_ACCESS_CLIENT_ID" \
-            --service-token-secret "$CF_ACCESS_CLIENT_SECRET" &
-          echo $! > cloudflared.pid
-
       - name: Configure SSH client
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' \
             'Host dmz-gateway' \
-            '  HostName localhost' \
-            '  Port 2222' \
+            "  HostName $SSH_HOSTNAME" \
             "  User $DEPLOY_USER" \
             '  IdentityFile ~/.ssh/deploy_key' \
             '  IdentitiesOnly yes' \
             '  StrictHostKeyChecking no' \
-            '  UserKnownHostsFile /dev/null' >> ~/.ssh/config
+            '  UserKnownHostsFile /dev/null' \
+            "  ProxyCommand cloudflared access ssh --hostname %h --service-token-id $CF_ACCESS_CLIENT_ID --service-token-secret $CF_ACCESS_CLIENT_SECRET" >> ~/.ssh/config
 
       - name: Upload site payload
         run: |
@@ -89,7 +79,3 @@ jobs:
           done
           echo "Site did not become reachable in time" >&2; exit 1
 
-      - name: Stop Cloudflare Access tunnel
-        if: always()
-        run: |
-          if [ -f cloudflared.pid ]; then kill $(cat cloudflared.pid); fi
