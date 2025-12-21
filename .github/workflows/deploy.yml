@@ -43,10 +43,16 @@ jobs:
       - name: Configure SSH client
         run: |
           mkdir -p ~/.ssh
+          # Write credentials to a sourced file
+          printf 'export CF_ACCESS_CLIENT_ID="%s"\nexport CF_ACCESS_CLIENT_SECRET="%s"\n' \
+            "$CF_ACCESS_CLIENT_ID" "$CF_ACCESS_CLIENT_SECRET" > /tmp/cf-creds.env
           # Create wrapper script
-          printf '%s\n' '#!/bin/bash' 'exec cloudflared access ssh --hostname "$1"' > /tmp/cf-ssh-proxy.sh
+          printf '%s\n' \
+            '#!/bin/bash' \
+            'source /tmp/cf-creds.env' \
+            'exec cloudflared access ssh --hostname "$1"' > /tmp/cf-ssh-proxy.sh
           chmod +x /tmp/cf-ssh-proxy.sh
-          # Write SSH config with embedded credentials
+          # Write SSH config
           printf '%s\n' \
             'Host dmz-gateway' \
             "  HostName $SSH_HOSTNAME" \
@@ -55,7 +61,7 @@ jobs:
             '  IdentitiesOnly yes' \
             '  StrictHostKeyChecking no' \
             '  UserKnownHostsFile /dev/null' \
-            "  ProxyCommand CF_ACCESS_CLIENT_ID='$CF_ACCESS_CLIENT_ID' CF_ACCESS_CLIENT_SECRET='$CF_ACCESS_CLIENT_SECRET' /tmp/cf-ssh-proxy.sh %h" >> ~/.ssh/config
+            '  ProxyCommand /tmp/cf-ssh-proxy.sh %h' >> ~/.ssh/config
 
       - name: Upload site payload
         run: |
