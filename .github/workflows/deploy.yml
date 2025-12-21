@@ -43,13 +43,10 @@ jobs:
       - name: Configure SSH client
         run: |
           mkdir -p ~/.ssh
-          # Create wrapper script that sets cloudflared env vars
-          cat > /tmp/cf-ssh-proxy.sh <<'ENDSCRIPT'
-#!/bin/bash
-exec cloudflared access ssh --hostname "$1"
-ENDSCRIPT
+          # Create wrapper script
+          printf '%s\n' '#!/bin/bash' 'exec cloudflared access ssh --hostname "$1"' > /tmp/cf-ssh-proxy.sh
           chmod +x /tmp/cf-ssh-proxy.sh
-          # Write SSH config
+          # Write SSH config with embedded credentials
           printf '%s\n' \
             'Host dmz-gateway' \
             "  HostName $SSH_HOSTNAME" \
