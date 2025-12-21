@@ -44,12 +44,10 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           # Create wrapper script that sets cloudflared env vars
-          cat > /tmp/cf-ssh-proxy.sh << EOF
-          #!/bin/bash
-          export CF_ACCESS_CLIENT_ID='$CF_ACCESS_CLIENT_ID'
-          export CF_ACCESS_CLIENT_SECRET='$CF_ACCESS_CLIENT_SECRET'
-          exec cloudflared access ssh --hostname "\$1"
-          EOF
+          cat > /tmp/cf-ssh-proxy.sh <<'ENDSCRIPT'
+#!/bin/bash
+exec cloudflared access ssh --hostname "$1"
+ENDSCRIPT
           chmod +x /tmp/cf-ssh-proxy.sh
           # Write SSH config
           printf '%s\n' \
@@ -60,7 +58,7 @@ jobs:
             '  IdentitiesOnly yes' \
             '  StrictHostKeyChecking no' \
             '  UserKnownHostsFile /dev/null' \
-            '  ProxyCommand /tmp/cf-ssh-proxy.sh %h' >> ~/.ssh/config
+            "  ProxyCommand CF_ACCESS_CLIENT_ID='$CF_ACCESS_CLIENT_ID' CF_ACCESS_CLIENT_SECRET='$CF_ACCESS_CLIENT_SECRET' /tmp/cf-ssh-proxy.sh %h" >> ~/.ssh/config
 
       - name: Upload site payload
         run: |
