@@ -15,7 +15,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      CLOUDFLARE_TUNNEL_CREDENTIAL_FILE: /dev/null
       SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
       SSH_HOSTNAME: ${{ vars.SSH_HOSTNAME }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER || 'deploy' }}
@@ -24,36 +23,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Add deploy key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.DMZ_GATEWAY_SSH_KEY }}
-
       - name: Install cloudflared
         run: |
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
           sudo dpkg -i cloudflared.deb
 
-      - name: Write deploy key file
+      - name: Deploy via Cloudflare Access (SSH)
         run: |
+          set -euo pipefail
+
+          # Write deploy key
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.DMZ_GATEWAY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-      - name: Start Cloudflare Access tunnel
-        run: |
-          cloudflared access tcp \
-            --hostname "$SSH_HOSTNAME" \
-            --url localhost:2222 \
-            --service-token-id "$CF_ACCESS_CLIENT_ID" \
-            --service-token-secret "$CF_ACCESS_CLIENT_SECRET" &
-          echo $! > /tmp/cloudflared.pid
-          # Wait for tunnel to establish
-          sleep 10
-
-      - name: Configure SSH client
-        run: |
-          mkdir -p ~/.ssh
+          # Configure SSH client to use local tunnel port
           printf '%s\n' \
             'Host dmz-gateway' \
             '  HostName localhost' \
@@ -64,22 +48,48 @@ jobs:
             '  StrictHostKeyChecking no' \
             '  UserKnownHostsFile /dev/null' >> ~/.ssh/config
 
-      - name: Verify tunnel connectivity
-        run: |
+          # Start Cloudflare Access TCP tunnel (logs to file so we can print on failure)
+          step_ok=0
+          CF_PID=""
+          cleanup() {
+            if [ -n "${CF_PID}" ]; then
+              kill "${CF_PID}" 2>/dev/null || true
+            fi
+            if [ "${step_ok}" -eq 0 ]; then
+              echo "---- cloudflared log (last 200 lines) ----"
+              tail -200 /tmp/cloudflared.log 2>/dev/null || true
+            fi
+          }
+          trap cleanup EXIT
+
+          echo "Starting Cloudflare Access TCP tunnel..."
+          cloudflared access tcp \
+            --hostname "$SSH_HOSTNAME" \
+            --url localhost:2222 \
+            --service-token-id "$CF_ACCESS_CLIENT_ID" \
+            --service-token-secret "$CF_ACCESS_CLIENT_SECRET" \
+            --loglevel debug \
+            --logfile /tmp/cloudflared.log &
+          CF_PID=$!
+
           echo "Testing SSH connection through tunnel..."
-          for i in {1..6}; do
-            if ssh -o ConnectTimeout=5 dmz-gateway 'echo "Connection OK"'; then
+          tunnel_ok=0
+          for i in {1..12}; do
+            if ssh -o ConnectTimeout=20 dmz-gateway 'echo "Connection OK"'; then
+              tunnel_ok=1
               echo "Tunnel is ready"
-              exit 0
+              break
             fi
             echo "Attempt $i failed, retrying in 5s..."
             sleep 5
           done
-          echo "Failed to establish tunnel connection after 6 attempts"
-          exit 1
 
-      - name: Upload site payload
-        run: |
+          if [ "$tunnel_ok" -ne 1 ]; then
+            echo "Failed to establish tunnel connection"
+            exit 1
+          fi
+
+          echo "Uploading site payload..."
           tar -czf - \
             --exclude '.git' \
             --exclude '.github' \
@@ -87,13 +97,13 @@ jobs:
             --exclude '*.example' \
             . | ssh dmz-gateway 'sudo tar xzf - -C /var/www/html --strip-components=0'
 
-      - name: Set permissions
-        run: |
+          echo "Setting permissions..."
           ssh dmz-gateway 'sudo chown -R caddy:caddy /var/www/html'
 
-      - name: Reload Caddy
-        run: |
+          echo "Reloading Caddy..."
           ssh dmz-gateway 'sudo systemctl reload caddy'
+
+          step_ok=1
 
       - name: Health check
         run: |
@@ -104,8 +114,3 @@ jobs:
             sleep 2
           done
           echo "Site did not become reachable in time" >&2; exit 1
-
-      - name: Stop Cloudflare Access tunnel
-        if: always()
-        run: |
-          if [ -f /tmp/cloudflared.pid ]; then kill $(cat /tmp/cloudflared.pid) 2>/dev/null || true; fi
