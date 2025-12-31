@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Artur — Personal Website</title>
+    <meta name="description" content="Personal website and portfolio." />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        /* Palette inspired by oval.earth & blocks.shawnlukas.com */
+        --bg-color: #050505;
+        --text-main: #ececec;
+        --text-muted: #999999;
+        --text-dim: #555555;
+
+        /* Subtle blue/purple glow akin to Oval/Timedrift */
+        --accent-glow: rgba(90, 100, 255, 0.12);
+        --accent-glow-secondary: rgba(180, 50, 255, 0.08);
+
+        --glass-border: rgba(255, 255, 255, 0.06);
+        --glass-bg: rgba(20, 20, 20, 0.3);
+
+        --font-main: "Inter", sans-serif;
+        --max-width: 680px;
+      }
+
+      /* Reset */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        font-family: var(--font-main);
+        line-height: 1.6;
+        min-height: 100vh;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-weight: 300;
+        position: relative;
+      }
+
+      /* Ambient Background Effects */
+      .ambient-glow {
+        position: fixed;
+        top: 40%;
+        left: 50%;
+        width: 80vw;
+        height: 80vh;
+        background: radial-gradient(
+          circle at center,
+          var(--accent-glow) 0%,
+          transparent 70%
+        );
+        transform: translate(-50%, -50%);
+        z-index: -2;
+        pointer-events: none;
+        filter: blur(80px);
+        opacity: 0.8;
+        animation: pulse-glow 15s ease-in-out infinite alternate;
+      }
+
+      .ambient-glow-2 {
+        position: fixed;
+        bottom: -20%;
+        right: -10%;
+        width: 60vw;
+        height: 60vh;
+        background: radial-gradient(
+          circle at center,
+          var(--accent-glow-secondary) 0%,
+          transparent 70%
+        );
+        z-index: -2;
+        pointer-events: none;
+        filter: blur(100px);
+        opacity: 0.6;
+      }
+
+      .grain-overlay {
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+        opacity: 0.03;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      @keyframes pulse-glow {
+        0% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 0.7;
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(1.15);
+          opacity: 0.9;
+        }
+      }
+
+      /* Main Layout */
+      main {
+        width: 100%;
+        max-width: var(--max-width);
+        padding: 80px 24px 40px;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Typography & Components */
+      header {
+        margin-bottom: 60px;
+        text-align: left;
+        animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      h1 {
+        font-size: 3rem;
+        font-weight: 500;
+        letter-spacing: -0.04em;
+        margin-bottom: 12px;
+        /* Gradient Text */
+        background: linear-gradient(to right, #ffffff, #999);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .subtitle {
+        color: var(--text-muted);
+        font-size: 1.125rem;
+        font-weight: 400;
+        letter-spacing: -0.01em;
+        max-width: 400px;
+      }
+
+      .divider {
+        height: 1px;
+        width: 100%;
+        background: linear-gradient(90deg, var(--glass-border), transparent);
+        margin: 40px 0;
+        opacity: 0.5;
+      }
+
+      /* Sections */
+      .bio-section {
+        margin-bottom: 60px;
+        opacity: 0;
+        animation: slideUp 1s ease-out 0.3s forwards;
+      }
+
+      .bio-section h2 {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-dim);
+        margin-bottom: 24px;
+      }
+
+      .bio-content {
+        font-size: 1.05rem;
+        color: #d4d4d4;
+        line-height: 1.75;
+      }
+
+      .bio-content p {
+        margin-bottom: 24px;
+      }
+
+      /* Link Grid (Blocks style) */
+      .links-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        opacity: 0;
+        animation: slideUp 1s ease-out 0.5s forwards;
+      }
+
+      .link-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 24px;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        text-decoration: none;
+        border-radius: 4px;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        height: 120px;
+      }
+
+      /* Subtle glow on hover */
+      .link-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+          circle at top right,
+          rgba(255, 255, 255, 0.05),
+          transparent 60%
+        );
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .link-card:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        background: rgba(30, 30, 30, 0.4);
+      }
+
+      .link-card:hover::before {
+        opacity: 1;
+      }
+
+      .link-title {
+        color: var(--text-main);
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 4px;
+        z-index: 1;
+      }
+
+      .link-desc {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        z-index: 1;
+      }
+
+      .arrow-icon {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        color: var(--text-dim);
+        transition: transform 0.3s ease, color 0.3s ease;
+      }
+
+      .link-card:hover .arrow-icon {
+        transform: translate(2px, -2px);
+        color: var(--text-main);
+      }
+
+      /* Footer */
+      footer {
+        margin-top: 80px;
+        margin-bottom: 40px;
+        font-size: 0.8rem;
+        color: var(--text-dim);
+        text-align: center;
+        opacity: 0;
+        animation: fadeIn 1s ease-out 1s forwards;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .links-grid {
+          grid-template-columns: 1fr;
+        }
+        h1 {
+          font-size: 2.4rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
+    <div class="grain-overlay"></div>
+
+    <main>
+      <header>
+        <h1>Artur</h1>
+        <p class="subtitle">Software Engineer & Digital Craftsman</p>
+      </header>
+
+      <section class="bio-section">
+        <h2>About</h2>
+        <div class="bio-content">
+          <p>
+            I build bridges between complex systems and human experiences. This
+            space is a collection of my thoughts, experiments, and the stories
+            behind the code.
+          </p>
+          <p style="color: var(--text-muted); font-style: italic">
+            (Content from your bio can be placed here. I've prepared the stage.)
+          </p>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section class="links-grid">
+        <a
+          href="https://github.com/your-username"
+          class="link-card"
+          target="_blank"
+        >
+          <span class="link-title">GitHub</span>
+          <span class="link-desc">Open source contributions</span>
+          <span class="arrow-icon">↗</span>
+        </a>
+        <a href="mailto:you@example.com" class="link-card">
+          <span class="link-title">Contact</span>
+          <span class="link-desc">Get in touch</span>
+          <span class="arrow-icon">→</span>
+        </a>
+        <a href="#" class="link-card">
+          <span class="link-title">Projects</span>
+          <span class="link-desc">Selected works</span>
+          <span class="arrow-icon">→</span>
+        </a>
+        <a href="#" class="link-card">
+          <span class="link-title">Writing</span>
+          <span class="link-desc">Thoughts & Essays</span>
+          <span class="arrow-icon">→</span>
+        </a>
+      </section>
+
+      <footer>© 2025 Artur. All rights reserved.</footer>
+    </main>
+
+    <script>
+      // Optional: Add a very subtle parallax to the glow on scroll
+      window.addEventListener("scroll", () => {
+        const scrolled = window.scrollY;
+        const glow = document.querySelector(".ambient-glow");
+        if (glow) {
+          glow.style.transform = `translate(-50%, calc(-50% + ${
+            scrolled * 0.1
+          }px))`;
+        }
+      });
+    </script>
+  </body>
+</html>
