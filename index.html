@@ -6,31 +6,39 @@
     <title>Artur — Personal Website</title>
     <meta name="description" content="Personal website and portfolio." />
 
-    <!-- Fonts -->
+    <!-- Fonts - JetBrains Mono for technical aesthetic -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
 
     <style>
       :root {
-        /* Palette inspired by oval.earth & blocks.shawnlukas.com */
-        --bg-color: #050505;
-        --text-main: #ececec;
-        --text-muted: #999999;
-        --text-dim: #555555;
+        /* Very dark purple palette - near black */
+        --bg-color: #06000a;
+        --bg-secondary: #030005;
+        --text-main: #c8c8d0;
+        --text-muted: #6a6a7a;
+        --text-dim: #3a3a4a;
 
-        /* Subtle blue/purple glow akin to Oval/Timedrift */
-        --accent-glow: rgba(90, 100, 255, 0.12);
-        --accent-glow-secondary: rgba(180, 50, 255, 0.08);
+        /* Technical amber/gold accent */
+        --accent-amber: #d4a04a;
+        --accent-amber-dim: rgba(212, 160, 74, 0.3);
+        --accent-purple: rgba(80, 40, 120, 0.08);
 
-        --glass-border: rgba(255, 255, 255, 0.06);
-        --glass-bg: rgba(20, 20, 20, 0.3);
+        /* Grid and border colors */
+        --grid-color: rgba(80, 60, 120, 0.05);
+        --border-color: rgba(100, 80, 140, 0.2);
+        --border-hover: rgba(212, 160, 74, 0.4);
 
-        --font-main: "Inter", sans-serif;
-        --max-width: 680px;
+        /* Matte surface */
+        --surface-bg: rgba(15, 5, 25, 0.6);
+
+        --font-mono: "JetBrains Mono", monospace;
+        --font-display: "Space Grotesk", sans-serif;
+        --max-width: 720px;
       }
 
       /* Reset */
@@ -43,243 +51,381 @@
       body {
         background-color: var(--bg-color);
         color: var(--text-main);
-        font-family: var(--font-main);
-        line-height: 1.6;
+        font-family: var(--font-mono);
+        line-height: 1.7;
         min-height: 100vh;
         overflow-x: hidden;
         display: flex;
         flex-direction: column;
         align-items: center;
-        font-weight: 300;
+        font-weight: 400;
+        font-size: 14px;
         position: relative;
       }
 
-      /* Ambient Background Effects */
-      .ambient-glow {
-        position: fixed;
-        top: 40%;
-        left: 50%;
-        width: 80vw;
-        height: 80vh;
-        background: radial-gradient(
-          circle at center,
-          var(--accent-glow) 0%,
-          transparent 70%
-        );
-        transform: translate(-50%, -50%);
-        z-index: -2;
-        pointer-events: none;
-        filter: blur(80px);
-        opacity: 0.8;
-        animation: pulse-glow 15s ease-in-out infinite alternate;
-      }
-
-      .ambient-glow-2 {
-        position: fixed;
-        bottom: -20%;
-        right: -10%;
-        width: 60vw;
-        height: 60vh;
-        background: radial-gradient(
-          circle at center,
-          var(--accent-glow-secondary) 0%,
-          transparent 70%
-        );
-        z-index: -2;
-        pointer-events: none;
-        filter: blur(100px);
-        opacity: 0.6;
-      }
-
-      .grain-overlay {
+      /* Grid Background Pattern */
+      .grid-overlay {
         position: fixed;
         inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
-        opacity: 0.03;
+        background-image: 
+          linear-gradient(var(--grid-color) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+        background-size: 60px 60px;
+        z-index: -3;
+        pointer-events: none;
+      }
+
+      /* Subtle matte gradient (no blur for matte look) */
+      .ambient-gradient {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+          radial-gradient(ellipse at 20% 20%, var(--accent-purple) 0%, transparent 40%),
+          radial-gradient(ellipse at 80% 80%, rgba(40, 20, 60, 0.06) 0%, transparent 40%);
+        z-index: -2;
+        pointer-events: none;
+      }
+
+      /* Fine noise texture for matte finish */
+      .noise-overlay {
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+        opacity: 0.04;
         z-index: -1;
         pointer-events: none;
       }
 
-      @keyframes pulse-glow {
-        0% {
-          transform: translate(-50%, -50%) scale(1);
-          opacity: 0.7;
-        }
-        100% {
-          transform: translate(-50%, -50%) scale(1.15);
-          opacity: 0.9;
-        }
+      /* Scan lines for technical effect */
+      .scanlines {
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.03) 2px,
+          rgba(0, 0, 0, 0.03) 4px
+        );
+        z-index: 100;
+        pointer-events: none;
       }
 
       /* Main Layout */
       main {
         width: 100%;
         max-width: var(--max-width);
-        padding: 80px 24px 40px;
+        padding: 100px 32px 60px;
         position: relative;
         z-index: 1;
       }
 
-      /* Typography & Components */
-      header {
+      /* Corner Brackets Frame */
+      .frame-container {
+        position: relative;
+        padding: 40px;
         margin-bottom: 60px;
-        text-align: left;
-        animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .corner {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-color: var(--border-color);
+        border-style: solid;
+        border-width: 0;
+      }
+
+      .corner-tl { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; }
+      .corner-tr { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; }
+      .corner-bl { bottom: 0; left: 0; border-bottom-width: 1px; border-left-width: 1px; }
+      .corner-br { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; }
+
+      /* Header */
+      header {
+        margin-bottom: 50px;
+        animation: fadeIn 1s ease-out;
+      }
+
+      .section-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--text-dim);
+        margin-bottom: 16px;
+      }
+
+      .section-label::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        background: var(--accent-amber);
+        border-radius: 1px;
       }
 
       h1 {
-        font-size: 3rem;
+        font-family: var(--font-display);
+        font-size: 2.5rem;
         font-weight: 500;
-        letter-spacing: -0.04em;
+        letter-spacing: -0.02em;
         margin-bottom: 12px;
-        /* Gradient Text */
-        background: linear-gradient(to right, #ffffff, #999);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: var(--text-main);
       }
 
       .subtitle {
         color: var(--text-muted);
-        font-size: 1.125rem;
-        font-weight: 400;
-        letter-spacing: -0.01em;
-        max-width: 400px;
+        font-size: 0.9rem;
+        font-weight: 300;
+        letter-spacing: 0.02em;
       }
 
+      .coords {
+        margin-top: 20px;
+        font-size: 0.7rem;
+        color: var(--text-dim);
+        letter-spacing: 0.1em;
+      }
+
+      /* Divider with data markers */
       .divider {
-        height: 1px;
-        width: 100%;
-        background: linear-gradient(90deg, var(--glass-border), transparent);
+        display: flex;
+        align-items: center;
+        gap: 12px;
         margin: 40px 0;
-        opacity: 0.5;
+        opacity: 0.6;
       }
 
-      /* Sections */
+      .divider-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--border-color), transparent);
+      }
+
+      .divider-marker {
+        font-size: 0.65rem;
+        color: var(--text-dim);
+        letter-spacing: 0.1em;
+      }
+
+      /* Bio Section */
       .bio-section {
-        margin-bottom: 60px;
+        margin-bottom: 50px;
         opacity: 0;
-        animation: slideUp 1s ease-out 0.3s forwards;
+        animation: slideUp 0.8s ease-out 0.2s forwards;
       }
 
       .bio-section h2 {
-        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.7rem;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.15em;
         color: var(--text-dim);
-        margin-bottom: 24px;
+        margin-bottom: 20px;
+        font-weight: 400;
+      }
+
+      .bio-section h2::before {
+        content: "//";
+        color: var(--accent-amber-dim);
       }
 
       .bio-content {
-        font-size: 1.05rem;
-        color: #d4d4d4;
-        line-height: 1.75;
+        font-size: 0.95rem;
+        color: #a8a8b0;
+        line-height: 1.8;
       }
 
       .bio-content p {
-        margin-bottom: 24px;
+        margin-bottom: 20px;
       }
 
-      /* Link Grid (Blocks style) */
+      /* Data Panel */
+      .data-panel {
+        background: var(--surface-bg);
+        border: 1px solid var(--border-color);
+        padding: 20px;
+        margin-bottom: 50px;
+        position: relative;
+        opacity: 0;
+        animation: slideUp 0.8s ease-out 0.4s forwards;
+      }
+
+      .data-panel::before {
+        content: "DATA ANALYSIS";
+        position: absolute;
+        top: -8px;
+        left: 16px;
+        font-size: 0.6rem;
+        letter-spacing: 0.15em;
+        color: var(--accent-amber);
+        background: var(--bg-color);
+        padding: 0 8px;
+      }
+
+      .data-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(100, 80, 140, 0.1);
+        font-size: 0.8rem;
+      }
+
+      .data-row:last-child {
+        border-bottom: none;
+      }
+
+      .data-label {
+        color: var(--text-dim);
+      }
+
+      .data-value {
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      .data-value.highlight {
+        color: var(--accent-amber);
+      }
+
+      /* Link Grid */
       .links-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+        gap: 12px;
         opacity: 0;
-        animation: slideUp 1s ease-out 0.5s forwards;
+        animation: slideUp 0.8s ease-out 0.6s forwards;
       }
 
       .link-card {
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        padding: 24px;
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
+        justify-content: space-between;
+        padding: 20px;
+        background: var(--surface-bg);
+        border: 1px solid var(--border-color);
         text-decoration: none;
-        border-radius: 4px;
-        transition: border-color 0.3s ease, background-color 0.3s ease;
         position: relative;
-        overflow: hidden;
-        height: 120px;
+        height: 110px;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
       }
 
-      /* Subtle glow on hover */
-      .link-card::before {
+      .link-card::before,
+      .link-card::after {
         content: "";
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(
-          circle at top right,
-          rgba(255, 255, 255, 0.05),
-          transparent 60%
-        );
-        opacity: 0;
-        transition: opacity 0.3s ease;
+        width: 8px;
+        height: 8px;
+        border-color: var(--border-color);
+        border-style: solid;
+        transition: border-color 0.3s ease;
+      }
+
+      .link-card::before {
+        top: -1px;
+        left: -1px;
+        border-width: 1px 0 0 1px;
+      }
+
+      .link-card::after {
+        bottom: -1px;
+        right: -1px;
+        border-width: 0 1px 1px 0;
       }
 
       .link-card:hover {
-        border-color: rgba(255, 255, 255, 0.15);
-        background: rgba(30, 30, 30, 0.4);
+        border-color: var(--border-hover);
+        background: rgba(20, 10, 30, 0.8);
       }
 
-      .link-card:hover::before {
-        opacity: 1;
+      .link-card:hover::before,
+      .link-card:hover::after {
+        border-color: var(--accent-amber);
+      }
+
+      .link-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+
+      .link-index {
+        font-size: 0.6rem;
+        color: var(--text-dim);
+        letter-spacing: 0.1em;
       }
 
       .link-title {
         color: var(--text-main);
-        font-size: 1rem;
+        font-size: 0.9rem;
         font-weight: 500;
-        margin-bottom: 4px;
-        z-index: 1;
+        font-family: var(--font-display);
       }
 
       .link-desc {
-        color: var(--text-muted);
-        font-size: 0.85rem;
-        z-index: 1;
-      }
-
-      .arrow-icon {
-        position: absolute;
-        bottom: 20px;
-        right: 20px;
         color: var(--text-dim);
-        transition: transform 0.3s ease, color 0.3s ease;
+        font-size: 0.75rem;
+        letter-spacing: 0.02em;
       }
 
-      .link-card:hover .arrow-icon {
-        transform: translate(2px, -2px);
-        color: var(--text-main);
+      .link-card:hover .link-title {
+        color: var(--accent-amber);
       }
 
       /* Footer */
       footer {
         margin-top: 80px;
-        margin-bottom: 40px;
-        font-size: 0.8rem;
+        padding-top: 30px;
+        border-top: 1px solid var(--border-color);
+        font-size: 0.7rem;
         color: var(--text-dim);
         text-align: center;
+        letter-spacing: 0.1em;
         opacity: 0;
-        animation: fadeIn 1s ease-out 1s forwards;
+        animation: fadeIn 0.8s ease-out 1s forwards;
       }
 
+      .footer-grid {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-bottom: 20px;
+      }
+
+      .footer-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .footer-label {
+        font-size: 0.6rem;
+        color: var(--text-dim);
+        text-transform: uppercase;
+      }
+
+      .footer-value {
+        color: var(--text-muted);
+      }
+
+      /* Animations */
       @keyframes fadeIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
 
       @keyframes slideUp {
         from {
           opacity: 0;
-          transform: translateY(20px);
+          transform: translateY(16px);
         }
         to {
           opacity: 1;
@@ -287,26 +433,51 @@
         }
       }
 
+      /* Responsive */
       @media (max-width: 600px) {
+        main {
+          padding: 60px 20px 40px;
+        }
+
+        .frame-container {
+          padding: 24px;
+        }
+
         .links-grid {
           grid-template-columns: 1fr;
         }
+
         h1 {
-          font-size: 2.4rem;
+          font-size: 2rem;
+        }
+
+        .footer-grid {
+          flex-direction: column;
+          gap: 16px;
         }
       }
     </style>
   </head>
   <body>
-    <div class="ambient-glow"></div>
-    <div class="ambient-glow-2"></div>
-    <div class="grain-overlay"></div>
+    <div class="grid-overlay"></div>
+    <div class="ambient-gradient"></div>
+    <div class="noise-overlay"></div>
+    <div class="scanlines"></div>
 
     <main>
-      <header>
-        <h1>Artur A. Do Lago</h1>
-        <p class="subtitle">Knowledge work.</p>
-      </header>
+      <div class="frame-container">
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+
+        <header>
+          <div class="section-label">Identity</div>
+          <h1>Artur A. Do Lago</h1>
+          <p class="subtitle">Knowledge work.</p>
+
+        </header>
+      </div>
 
       <section class="bio-section">
         <h2>About</h2>
@@ -315,55 +486,57 @@
             This space is a collection of my thoughts, experiments, and the stories
             behind them.
           </p>
-          <p style="color: var(--text-muted); font-style: italic">
-            (Content from your bio can be placed here. I've prepared the stage.)
-          </p>
         </div>
       </section>
 
-      <div class="divider"></div>
+      <div class="divider">
+        <div class="divider-line"></div>
+      </div>
 
       <section class="links-grid">
-        <a
-          href="https://github.com/adolago"
-          class="link-card"
-          target="_blank"
-        >
-          <span class="link-title">GitHub</span>
+        <a href="https://github.com/adolago" class="link-card" target="_blank">
+          <div class="link-header">
+            <span class="link-title">GitHub</span>
+            <span class="link-index">A1</span>
+          </div>
           <span class="link-desc">Open source contributions</span>
-          <span class="arrow-icon">↗</span>
         </a>
         <a href="mailto:dolagoartur@gmail.com" class="link-card">
-          <span class="link-title">Contact</span>
+          <div class="link-header">
+            <span class="link-title">Contact</span>
+            <span class="link-index">A2</span>
+          </div>
           <span class="link-desc">Get in touch</span>
-          <span class="arrow-icon">→</span>
+        </a>
+        <a href="https://www.linkedin.com/in/adolago/" class="link-card" target="_blank">
+          <div class="link-header">
+            <span class="link-title">LinkedIn</span>
+            <span class="link-index">A3</span>
+          </div>
+          <span class="link-desc">Professional network</span>
         </a>
         <a href="#" class="link-card">
-          <span class="link-title">Projects</span>
-          <span class="link-desc">Selected works</span>
-          <span class="arrow-icon">→</span>
-        </a>
-        <a href="#" class="link-card">
-          <span class="link-title">Writing</span>
+          <div class="link-header">
+            <span class="link-title">Writing</span>
+            <span class="link-index">A4</span>
+          </div>
           <span class="link-desc">Thoughts & Essays</span>
-          <span class="arrow-icon">→</span>
         </a>
       </section>
 
-      <footer>© 2025 Artur. All rights reserved.</footer>
+      <footer>
+        <div class="footer-grid">
+          <div class="footer-item">
+            <span class="footer-label">Build</span>
+            <span class="footer-value">2025.01.01</span>
+          </div>
+          <div class="footer-item">
+            <span class="footer-label">Status</span>
+            <span class="footer-value">Online</span>
+          </div>
+        </div>
+        <p>© 2025 Artur. All rights reserved.</p>
+      </footer>
     </main>
-
-    <script>
-      // Optional: Add a very subtle parallax to the glow on scroll
-      window.addEventListener("scroll", () => {
-        const scrolled = window.scrollY;
-        const glow = document.querySelector(".ambient-glow");
-        if (glow) {
-          glow.style.transform = `translate(-50%, calc(-50% + ${
-            scrolled * 0.1
-          }px))`;
-        }
-      });
-    </script>
   </body>
 </html>
