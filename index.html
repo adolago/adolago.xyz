@@ -16,245 +16,214 @@
 
     <style>
       :root {
-        /* Very dark purple palette - near black */
-        --bg-color: #06000a;
-        --bg-secondary: #030005;
-        --text-main: #c8c8d0;
-        --text-muted: #6a6a7a;
-        --text-dim: #3a3a4a;
+        /* THE VOID */
+        --bg-color: #030005;
+        --bg-secondary: #000000;
+        
+        /* High Contrast / Aggressive Text */
+        --text-main: #e0e0e0;
+        --text-muted: #888;
+        --text-dim: #444;
 
-        /* Technical amber/gold accent */
-        --accent-amber: #d4a04a;
-        --accent-amber-dim: rgba(212, 160, 74, 0.3);
-        --accent-purple: rgba(80, 40, 120, 0.08);
+        /* MEAN ACCENT: Piercing Red-Orange */
+        --accent-danger: #ff3300;
+        --accent-dim: rgba(255, 51, 0, 0.15);
 
-        /* Grid and border colors */
-        --grid-color: rgba(80, 60, 120, 0.05);
-        --border-color: rgba(100, 80, 140, 0.2);
-        --border-hover: rgba(212, 160, 74, 0.4);
+        /* Aggressive Grid */
+        --grid-color: rgba(255, 50, 0, 0.04);
+        --border-color: rgba(255, 50, 0, 0.25);
+        --border-hover: #ff3300;
 
-        /* Matte surface */
-        --surface-bg: rgba(15, 5, 25, 0.6);
+        /* Surface */
+        --surface-bg: rgba(5, 0, 10, 0.8);
 
         --font-mono: "JetBrains Mono", monospace;
-        --font-display: "Space Grotesk", sans-serif;
         --max-width: 720px;
       }
 
-      /* Reset */
+      /* AGGRESSIVE RESET */
       * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
+        cursor: crosshair; /* Precision targeting */
       }
 
       body {
         background-color: var(--bg-color);
         color: var(--text-main);
-        font-family: var(--font-mono);
-        line-height: 1.7;
+        font-family: var(--font-mono); /* Monospace only = Raw/Industrial */
+        line-height: 1.6;
         min-height: 100vh;
         overflow-x: hidden;
         display: flex;
         flex-direction: column;
         align-items: center;
         font-weight: 400;
-        font-size: 14px;
+        font-size: 13px;
         position: relative;
+        text-transform: uppercase; /* YELLING IS MEANER */
+        letter-spacing: 0.05em;
       }
 
-      /* Grid Background Pattern */
+      /* HOSTILE ENVIRONMENT EFFECTS */
+      
+      /* 1. Heavy Vignette (Tunnel Vision) */
+      .vignette {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at center, transparent 40%, #000 120%);
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      /* 2. Sharp Grid */
       .grid-overlay {
         position: fixed;
         inset: 0;
         background-image: 
           linear-gradient(var(--grid-color) 1px, transparent 1px),
           linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-        background-size: 60px 60px;
+        background-size: 40px 40px; /* Tighter grid */
         z-index: -3;
         pointer-events: none;
       }
 
-      /* Subtle matte gradient (no blur for matte look) */
-      .ambient-gradient {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: 
-          radial-gradient(ellipse at 20% 20%, var(--accent-purple) 0%, transparent 40%),
-          radial-gradient(ellipse at 80% 80%, rgba(40, 20, 60, 0.06) 0%, transparent 40%);
-        z-index: -2;
-        pointer-events: none;
-      }
-
-      /* Fine noise texture for matte finish */
+      /* 3. Static/Noise (Intensified) */
       .noise-overlay {
         position: fixed;
         inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-        opacity: 0.04;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+        opacity: 0.07;
+        mix-blend-mode: overlay;
         z-index: -1;
         pointer-events: none;
       }
 
-      /* Scan lines for technical effect */
+      /* 4. CRT Scanlines */
       .scanlines {
         position: fixed;
         inset: 0;
-        background: repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 2px,
-          rgba(0, 0, 0, 0.03) 2px,
-          rgba(0, 0, 0, 0.03) 4px
+        background: linear-gradient(
+          to bottom,
+          rgba(255,255,255,0),
+          rgba(255,255,255,0) 50%,
+          rgba(0,0,0,0.2) 50%,
+          rgba(0,0,0,0.2)
         );
+        background-size: 100% 4px;
         z-index: 100;
         pointer-events: none;
       }
 
-      /* Main Layout */
+      /* Layout */
       main {
         width: 100%;
         max-width: var(--max-width);
-        padding: 100px 32px 60px;
+        padding: 120px 32px 60px;
         position: relative;
         z-index: 1;
       }
 
-      /* Corner Brackets Frame */
+      /* Frame: Thicker, harsher */
       .frame-container {
         position: relative;
         padding: 40px;
-        margin-bottom: 60px;
+        border: 1px solid rgba(255, 50, 0, 0.1); /* Subtle frame */
+        background: rgba(0,0,0,0.3);
       }
 
       .corner {
         position: absolute;
-        width: 20px;
-        height: 20px;
-        border-color: var(--border-color);
+        width: 12px;
+        height: 12px;
+        border-color: var(--accent-danger);
         border-style: solid;
         border-width: 0;
+        transition: all 0.2s cubic-bezier(0, 1, 0.5, 1);
       }
 
-      .corner-tl { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; }
-      .corner-tr { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; }
-      .corner-bl { bottom: 0; left: 0; border-bottom-width: 1px; border-left-width: 1px; }
-      .corner-br { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; }
+      .corner-tl { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
+      .corner-tr { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
+      .corner-bl { bottom: -1px; left: -1px; border-bottom-width: 2px; border-left-width: 2px; }
+      .corner-br { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
 
-      /* Header */
+      /* Header Style */
       header {
-        margin-bottom: 50px;
-        animation: fadeIn 1s ease-out;
+        margin-bottom: 60px;
       }
 
       .section-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        color: var(--text-dim);
-        margin-bottom: 16px;
-      }
-
-      .section-label::before {
-        content: "";
-        width: 6px;
-        height: 6px;
-        background: var(--accent-amber);
-        border-radius: 1px;
+        font-size: 0.6rem;
+        color: var(--accent-danger);
+        font-weight: 800;
+        margin-bottom: 20px;
+        display: block;
       }
 
       h1 {
-        font-family: var(--font-display);
-        font-size: 2.5rem;
-        font-weight: 500;
-        letter-spacing: -0.02em;
+        font-family: var(--font-mono);
+        font-size: 2.8rem;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.04em;
         margin-bottom: 12px;
         color: var(--text-main);
+        
+        /* VISUAL GLITCH / ABERRATION */
+        text-shadow: 
+           2px 0px 0px rgba(255, 0, 0, 0.5),
+          -2px 0px 0px rgba(0, 255, 255, 0.3);
+        animation: twitch 3s infinite alternate;
+      }
+
+      @keyframes twitch {
+        0% { transform: skewX(0deg); letter-spacing: -0.04em; }
+        5% { transform: skewX(2deg); letter-spacing: -0.04em;}
+        10% { transform: skewX(0deg); letter-spacing: -0.04em;}
+        90% { transform: skewX(0deg); }
+        95% { transform: skewX(-1deg); }
+        100% { transform: skewX(0deg); }
       }
 
       .subtitle {
         color: var(--text-muted);
-        font-size: 0.9rem;
-        font-weight: 300;
-        letter-spacing: 0.02em;
-      }
-
-      .coords {
-        margin-top: 20px;
-        font-size: 0.7rem;
-        color: var(--text-dim);
-        letter-spacing: 0.1em;
-      }
-
-      /* Divider with data markers */
-      .divider {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 40px 0;
-        opacity: 0.6;
-      }
-
-      .divider-line {
-        flex: 1;
-        height: 1px;
-        background: linear-gradient(90deg, var(--border-color), transparent);
-      }
-
-      .divider-marker {
-        font-size: 0.65rem;
-        color: var(--text-dim);
-        letter-spacing: 0.1em;
-      }
-
-      /* Bio Section */
-      .bio-section {
-        margin-bottom: 50px;
-        opacity: 0;
-        animation: slideUp 0.8s ease-out 0.2s forwards;
-      }
-
-      .bio-section h2 {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        color: var(--text-dim);
-        margin-bottom: 20px;
+        font-size: 0.8rem;
         font-weight: 400;
       }
 
-      .bio-section h2::before {
-        content: "//";
-        color: var(--accent-amber-dim);
+      /* Divider - Razor Sharp */
+      .divider {
+        height: 1px;
+        background: var(--border-color);
+        margin: 50px 0;
+        position: relative;
+      }
+      
+      .divider::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: -2px;
+        width: 40px;
+        height: 5px;
+        background: var(--accent-danger);
       }
 
-      .bio-content {
-        font-size: 0.95rem;
-        color: #a8a8b0;
-        line-height: 1.8;
+      /* Bio */
+      .bio-section {
+        margin-bottom: 60px;
+      }
+
+      .bio-section h2 {
+        font-size: 0.7rem;
+        color: var(--accent-danger);
+        margin-bottom: 24px;
+        font-weight: 700;
       }
 
       .bio-content p {
         margin-bottom: 20px;
-      }
-
-      /* Data Panel */
-      .data-panel {
-        background: var(--surface-bg);
-        border: 1px solid var(--border-color);
-        padding: 20px;
-        margin-bottom: 50px;
-        position: relative;
-        opacity: 0;
         animation: slideUp 0.8s ease-out 0.4s forwards;
       }
 
@@ -323,97 +292,56 @@
         position: absolute;
         width: 8px;
         height: 8px;
-        border-color: var(--border-color);
-        border-style: solid;
-        transition: border-color 0.3s ease;
-      }
-
-      .link-card::before {
-        top: -1px;
-        left: -1px;
-        border-width: 1px 0 0 1px;
-      }
-
-      .link-card::after {
-        bottom: -1px;
-        right: -1px;
-        border-width: 0 1px 1px 0;
-      }
-
-      .link-card:hover {
-        border-color: var(--border-hover);
-        background: rgba(20, 10, 30, 0.8);
-      }
-
-      .link-card:hover::before,
-      .link-card:hover::after {
-        border-color: var(--accent-amber);
-      }
-
-      .link-header {
+        transition: all 0.1s steps(2);
+        height: 120px;
         display: flex;
+        flex-direction: column;
         justify-content: space-between;
-        align-items: flex-start;
       }
 
-      .link-index {
-        font-size: 0.6rem;
-        color: var(--text-dim);
-        letter-spacing: 0.1em;
+      /* Harsh hover effect */
+      .link-card:hover {
+        background: var(--accent-danger);
+        color: #000;
       }
 
       .link-title {
         color: var(--text-main);
-        font-size: 0.9rem;
-        font-weight: 500;
-        font-family: var(--font-display);
+        font-size: 1rem;
+        font-weight: 700;
+        display: block;
+      }
+      
+      .link-index {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-size: 0.6rem;
+        color: var(--text-dim);
       }
 
       .link-desc {
-        color: var(--text-dim);
-        font-size: 0.75rem;
-        letter-spacing: 0.02em;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
       }
 
-      .link-card:hover .link-title {
-        color: var(--accent-amber);
+      /* Invert colors on hover for impact */
+      .link-card:hover .link-title,
+      .link-card:hover .link-desc,
+      .link-card:hover .link-index {
+        color: #000; /* Black text on red background */
       }
 
       /* Footer */
       footer {
         margin-top: 80px;
-        padding-top: 30px;
         border-top: 1px solid var(--border-color);
-        font-size: 0.7rem;
+        padding-top: 20px;
         color: var(--text-dim);
-        text-align: center;
-        letter-spacing: 0.1em;
-        opacity: 0;
-        animation: fadeIn 0.8s ease-out 1s forwards;
-      }
-
-      .footer-grid {
+        font-size: 0.65rem;
         display: flex;
-        justify-content: center;
-        gap: 30px;
-        margin-bottom: 20px;
-      }
-
-      .footer-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-      }
-
-      .footer-label {
-        font-size: 0.6rem;
-        color: var(--text-dim);
-        text-transform: uppercase;
-      }
-
-      .footer-value {
-        color: var(--text-muted);
+        justify-content: space-between;
       }
 
       /* Animations */
@@ -443,24 +371,15 @@
           padding: 24px;
         }
 
-        .links-grid {
-          grid-template-columns: 1fr;
-        }
+        .links-grid { grid-template-columns: 1fr; }
 
-        h1 {
-          font-size: 2rem;
-        }
-
-        .footer-grid {
-          flex-direction: column;
-          gap: 16px;
-        }
+        h1 { font-size: 2rem; }
       }
     </style>
   </head>
   <body>
+    <div class="vignette"></div>
     <div class="grid-overlay"></div>
-    <div class="ambient-gradient"></div>
     <div class="noise-overlay"></div>
     <div class="scanlines"></div>
 
@@ -472,70 +391,50 @@
         <div class="corner corner-br"></div>
 
         <header>
-          <div class="section-label">Identity</div>
+          <!-- <div class="section-label">WARNING: SYSTEM ACTIVE</div> -->
           <h1>Artur A. Do Lago</h1>
-          <p class="subtitle">Knowledge work.</p>
-
+          <p class="subtitle">Systems & Knowledge.</p>
         </header>
-      </div>
-
-      <section class="bio-section">
-        <h2>About</h2>
-        <div class="bio-content">
-          <p>
-            This space is a collection of my thoughts, experiments, and the stories
-            behind them.
-          </p>
+        
+        <div class="bio-section">
+          <h2>// Profile</h2>
+          <div class="bio-content">
+            <p>
+              This space is a collection of my thoughts, experiments, and the stories
+              behind them.
+            </p>
+          </div>
         </div>
-      </section>
-
-      <div class="divider">
-        <div class="divider-line"></div>
       </div>
+
+      <!-- <div class="divider"></div> -->
 
       <section class="links-grid">
         <a href="https://github.com/adolago" class="link-card" target="_blank">
-          <div class="link-header">
-            <span class="link-title">GitHub</span>
-            <span class="link-index">A1</span>
-          </div>
+          <span class="link-title">GitHub</span>
+          <span class="link-index">A1</span>
           <span class="link-desc">Open source contributions</span>
         </a>
         <a href="mailto:dolagoartur@gmail.com" class="link-card">
-          <div class="link-header">
-            <span class="link-title">Contact</span>
-            <span class="link-index">A2</span>
-          </div>
+          <span class="link-title">Contact</span>
+          <span class="link-index">A2</span>
           <span class="link-desc">Get in touch</span>
         </a>
         <a href="https://www.linkedin.com/in/adolago/" class="link-card" target="_blank">
-          <div class="link-header">
-            <span class="link-title">LinkedIn</span>
-            <span class="link-index">A3</span>
-          </div>
+          <span class="link-title">LinkedIn</span>
+          <span class="link-index">A3</span>
           <span class="link-desc">Professional network</span>
         </a>
         <a href="#" class="link-card">
-          <div class="link-header">
-            <span class="link-title">Writing</span>
-            <span class="link-index">A4</span>
-          </div>
+          <span class="link-title">Writing</span>
+          <span class="link-index">A4</span>
           <span class="link-desc">Thoughts & Essays</span>
         </a>
       </section>
 
       <footer>
-        <div class="footer-grid">
-          <div class="footer-item">
-            <span class="footer-label">Build</span>
-            <span class="footer-value">2025.01.01</span>
-          </div>
-          <div class="footer-item">
-            <span class="footer-label">Status</span>
-            <span class="footer-value">Online</span>
-          </div>
-        </div>
-        <p>© 2025 Artur. All rights reserved.</p>
+        <span>build.2025.01.01</span>
+        <span>STATUS: ONLINE</span>
       </footer>
     </main>
   </body>
