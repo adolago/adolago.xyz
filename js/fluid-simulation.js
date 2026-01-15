@@ -31,7 +31,7 @@
         PRESSURE_ITERATIONS: 10,
         CURL: 3.5,                        // Reduced turbulence
         SPLAT_RADIUS: 3.0,                // Moderate width (cursor interaction)
-        SMOKE_RADIUS: 2.0,                // Wider plume
+        SMOKE_RADIUS: 2.6,                // Wider plume
         SMOKE_FORCE: 26,                  // Gentler upward push
         SPLAT_FORCE: 4000,
         SHADING: false,
@@ -39,13 +39,13 @@
         BLOOM: true,
         BLOOM_ITERATIONS: 8,
         BLOOM_RESOLUTION: 256,
-        BLOOM_INTENSITY: 0.2,             // Subtle glow
+        BLOOM_INTENSITY: 0.15,            // Subtle glow
         BLOOM_THRESHOLD: 0.08,            // Higher threshold to reduce bloom
         BLOOM_SOFT_KNEE: 0.8,
         // Rising smoke buoyancy
         SMOKE_BUOYANCY: 0.45,             // Gentler rise
         // Dimmer smoke
-        SMOKE_COLOR: { r: 0.0016, g: 0.0024, b: 0.0042 },
+        SMOKE_COLOR: { r: 0.0011, g: 0.0018, b: 0.0032 },
     };
 
     function pointerPrototype() {
@@ -857,16 +857,51 @@
         });
     }
 
-    // Emit soft billowing mist from single wide point
-    function emitSmoke(dt) {
-        const color = {
-            r: config.SMOKE_COLOR.r,
-            g: config.SMOKE_COLOR.g,
-            b: config.SMOKE_COLOR.b
-        };
+    function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+    }
 
-        // Emission sits just below the bottom edge for a below-frame source
-        splat(0.5, -0.02, 0, config.SMOKE_FORCE, color, config.SMOKE_RADIUS);
+    function getEmitterRange() {
+        const fallback = { start: 0.3, end: 0.7 };
+        const consoleEl = document.querySelector('.console');
+        if (!consoleEl) return fallback;
+
+        const rect = consoleEl.getBoundingClientRect();
+        const styles = window.getComputedStyle(consoleEl);
+        const padLeft = parseFloat(styles.paddingLeft) || 0;
+        const padRight = parseFloat(styles.paddingRight) || 0;
+        const width = canvas.clientWidth || window.innerWidth;
+        if (!width) return fallback;
+
+        const start = (rect.left + padLeft) / width;
+        const end = (rect.right - padRight) / width;
+        if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return fallback;
+
+        return {
+            start: clamp(start, 0.05, 0.95),
+            end: clamp(end, 0.05, 0.95)
+        };
+    }
+
+    // Emit a wide band of smoke aligned to the console width
+    function emitSmoke(dt) {
+        const { start, end } = getEmitterRange();
+        const span = end - start;
+        const count = Math.max(4, Math.round(span / 0.06));
+        const intensity = Math.min(1, 6 / count);
+
+        for (let i = 0; i < count; i++) {
+            const t = (i + 0.5) / count;
+            const drift = Math.sin(time * 0.6 + i) * 0.003;
+            const color = {
+                r: config.SMOKE_COLOR.r * intensity,
+                g: config.SMOKE_COLOR.g * intensity,
+                b: config.SMOKE_COLOR.b * intensity
+            };
+
+            // Emission sits just below the bottom edge for a below-frame source
+            splat(start + span * t + drift, -0.02, 0, config.SMOKE_FORCE, color, config.SMOKE_RADIUS);
+        }
     }
 
     function step(dt) {
