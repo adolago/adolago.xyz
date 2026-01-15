@@ -1,441 +1,136 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Artur — Personal Website</title>
-    <meta name="description" content="Personal website and portfolio." />
 
-    <!-- Fonts - JetBrains Mono for technical aesthetic -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600&display=swap"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="utf-8">
+  <title>your-domain.xyz</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #030508;
+      --panel: rgba(8, 15, 30, 0.85);
+      --panel-border: rgba(30, 50, 90, 0.4);
+      --line: #1a2a4a;
+      --line-soft: #0d1525;
+      --text: #e8edf5;
+      --muted: #8095b8;
+      --accent: #4a7fff;
+      --accent-glow: rgba(74, 127, 255, 0.3);
+    }
 
-    <style>
-      :root {
-        /* THE VOID */
-        --bg-color: #030005;
-        --bg-secondary: #000000;
-        
-        /* High Contrast / Aggressive Text */
-        --text-main: #e0e0e0;
-        --text-muted: #888;
-        --text-dim: #444;
+    * {
+      box-sizing: border-box;
+    }
 
-        /* MEAN ACCENT: Piercing Red-Orange */
-        --accent-danger: #ff3300;
-        --accent-dim: rgba(255, 51, 0, 0.15);
+    html,
+    body {
+      height: 100%;
+    }
 
-        /* Aggressive Grid */
-        --grid-color: rgba(255, 50, 0, 0.04);
-        --border-color: rgba(255, 50, 0, 0.25);
-        --border-hover: #ff3300;
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      letter-spacing: .03em;
+      display: grid;
+      place-items: center;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow: hidden;
+    }
 
-        /* Surface */
-        --surface-bg: rgba(5, 0, 10, 0.8);
+    .console {
+      width: min(560px, 90vw);
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 48px;
+      position: relative;
+      z-index: 10;
+    }
 
-        --font-mono: "JetBrains Mono", monospace;
-        --max-width: 720px;
+    .name {
+      font-size: 1.9rem;
+      font-weight: 400;
+      letter-spacing: .08em;
+      margin: 0 0 12px 0;
+      color: var(--text);
+    }
+
+    .bio {
+      color: var(--muted);
+      margin: 0 0 32px 0;
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .link {
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      padding: 12px 16px;
+      text-transform: uppercase;
+      letter-spacing: .2em;
+      font-size: .78rem;
+      transition: all 0.25s ease;
+      background: transparent;
+    }
+
+    .link:hover {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    /* Motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+      .link {
+        transition: none;
+      }
+    }
+
+    /* Responsiveness */
+    @media (max-width: 480px) {
+      .console {
+        padding: 32px 24px;
       }
 
-      /* AGGRESSIVE RESET */
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        cursor: crosshair; /* Precision targeting */
+      .name {
+        font-size: 1.5rem;
       }
+    }
+  </style>
+  <meta name="description" content="Your Name — your tagline here" />
+  <meta name="theme-color" content="#05080f" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='2' fill='%23050810'/%3E%3Cpath d='M3 11h10M3 8h10M3 5h6' stroke='%234a7fff' stroke-width='1'/%3E%3C/svg%3E" />
+</head>
 
-      body {
-        background-color: var(--bg-color);
-        color: var(--text-main);
-        font-family: var(--font-mono); /* Monospace only = Raw/Industrial */
-        line-height: 1.6;
-        min-height: 100vh;
-        overflow-x: hidden;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        font-weight: 400;
-        font-size: 13px;
-        position: relative;
-        text-transform: uppercase; /* YELLING IS MEANER */
-        letter-spacing: 0.05em;
-      }
+<body>
+  <main class="console">
+    <h1 class="name">Your Name</h1>
+    <p class="bio">
+      Your bio goes here. Describe what you do, what interests you,
+      or whatever you want visitors to know about you.
+    </p>
 
-      /* HOSTILE ENVIRONMENT EFFECTS */
-      
-      /* 1. Heavy Vignette (Tunnel Vision) */
-      .vignette {
-        position: fixed;
-        inset: 0;
-        background: radial-gradient(circle at center, transparent 40%, #000 120%);
-        z-index: 10;
-        pointer-events: none;
-      }
+    <div class="links">
+      <a href="https://github.com/your-username" class="link">GitHub</a>
+      <a href="mailto:you@example.com" class="link">email</a>
+      <a href="#" class="link">writing</a>
+    </div>
+  </main>
 
-      /* 2. Sharp Grid */
-      .grid-overlay {
-        position: fixed;
-        inset: 0;
-        background-image: 
-          linear-gradient(var(--grid-color) 1px, transparent 1px),
-          linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-        background-size: 40px 40px; /* Tighter grid */
-        z-index: -3;
-        pointer-events: none;
-      }
+  <script src="js/fluid-simulation.js"></script>
+</body>
 
-      /* 3. Static/Noise (Intensified) */
-      .noise-overlay {
-        position: fixed;
-        inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-        opacity: 0.07;
-        mix-blend-mode: overlay;
-        z-index: -1;
-        pointer-events: none;
-      }
-
-      /* 4. CRT Scanlines */
-      .scanlines {
-        position: fixed;
-        inset: 0;
-        background: linear-gradient(
-          to bottom,
-          rgba(255,255,255,0),
-          rgba(255,255,255,0) 50%,
-          rgba(0,0,0,0.2) 50%,
-          rgba(0,0,0,0.2)
-        );
-        background-size: 100% 4px;
-        z-index: 100;
-        pointer-events: none;
-      }
-
-      /* Layout */
-      main {
-        width: 100%;
-        max-width: var(--max-width);
-        padding: 120px 32px 60px;
-        position: relative;
-        z-index: 1;
-      }
-
-      /* Frame: Thicker, harsher */
-      .frame-container {
-        position: relative;
-        padding: 40px;
-        border: 1px solid rgba(255, 50, 0, 0.1); /* Subtle frame */
-        background: rgba(0,0,0,0.3);
-      }
-
-      .corner {
-        position: absolute;
-        width: 12px;
-        height: 12px;
-        border-color: var(--accent-danger);
-        border-style: solid;
-        border-width: 0;
-        transition: all 0.2s cubic-bezier(0, 1, 0.5, 1);
-      }
-
-      .corner-tl { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
-      .corner-tr { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
-      .corner-bl { bottom: -1px; left: -1px; border-bottom-width: 2px; border-left-width: 2px; }
-      .corner-br { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
-
-      /* Header Style */
-      header {
-        margin-bottom: 60px;
-      }
-
-      .section-label {
-        font-size: 0.6rem;
-        color: var(--accent-danger);
-        font-weight: 800;
-        margin-bottom: 20px;
-        display: block;
-      }
-
-      h1 {
-        font-family: var(--font-mono);
-        font-size: 2.8rem;
-        font-weight: 700;
-        line-height: 1;
-        letter-spacing: -0.04em;
-        margin-bottom: 12px;
-        color: var(--text-main);
-        
-        /* VISUAL GLITCH / ABERRATION */
-        text-shadow: 
-           2px 0px 0px rgba(255, 0, 0, 0.5),
-          -2px 0px 0px rgba(0, 255, 255, 0.3);
-        animation: twitch 3s infinite alternate;
-      }
-
-      @keyframes twitch {
-        0% { transform: skewX(0deg); letter-spacing: -0.04em; }
-        5% { transform: skewX(2deg); letter-spacing: -0.04em;}
-        10% { transform: skewX(0deg); letter-spacing: -0.04em;}
-        90% { transform: skewX(0deg); }
-        95% { transform: skewX(-1deg); }
-        100% { transform: skewX(0deg); }
-      }
-
-      .subtitle {
-        color: var(--text-muted);
-        font-size: 0.8rem;
-        font-weight: 400;
-      }
-
-      /* Divider - Razor Sharp */
-      .divider {
-        height: 1px;
-        background: var(--border-color);
-        margin: 50px 0;
-        position: relative;
-      }
-      
-      .divider::after {
-        content: "";
-        position: absolute;
-        right: 0;
-        top: -2px;
-        width: 40px;
-        height: 5px;
-        background: var(--accent-danger);
-      }
-
-      /* Bio */
-      .bio-section {
-        margin-bottom: 60px;
-      }
-
-      .bio-section h2 {
-        font-size: 0.7rem;
-        color: var(--accent-danger);
-        margin-bottom: 24px;
-        font-weight: 700;
-      }
-
-      .bio-content p {
-        margin-bottom: 20px;
-        animation: slideUp 0.8s ease-out 0.4s forwards;
-      }
-
-      .data-panel::before {
-        content: "DATA ANALYSIS";
-        position: absolute;
-        top: -8px;
-        left: 16px;
-        font-size: 0.6rem;
-        letter-spacing: 0.15em;
-        color: var(--accent-amber);
-        background: var(--bg-color);
-        padding: 0 8px;
-      }
-
-      .data-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(100, 80, 140, 0.1);
-        font-size: 0.8rem;
-      }
-
-      .data-row:last-child {
-        border-bottom: none;
-      }
-
-      .data-label {
-        color: var(--text-dim);
-      }
-
-      .data-value {
-        color: var(--text-muted);
-        font-weight: 500;
-      }
-
-      .data-value.highlight {
-        color: var(--accent-amber);
-      }
-
-      /* Link Grid */
-      .links-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        opacity: 0;
-        animation: slideUp 0.8s ease-out 0.6s forwards;
-      }
-
-      .link-card {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        padding: 20px;
-        background: var(--surface-bg);
-        border: 1px solid var(--border-color);
-        text-decoration: none;
-        position: relative;
-        height: 110px;
-        transition: border-color 0.3s ease, background-color 0.3s ease;
-      }
-
-      .link-card::before,
-      .link-card::after {
-        content: "";
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        transition: all 0.1s steps(2);
-        height: 120px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
-
-      /* Harsh hover effect */
-      .link-card:hover {
-        background: var(--accent-danger);
-        color: #000;
-      }
-
-      .link-title {
-        color: var(--text-main);
-        font-size: 1rem;
-        font-weight: 700;
-        display: block;
-      }
-      
-      .link-index {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        font-size: 0.6rem;
-        color: var(--text-dim);
-      }
-
-      .link-desc {
-        font-size: 0.7rem;
-        color: var(--text-muted);
-        text-transform: uppercase;
-      }
-
-      /* Invert colors on hover for impact */
-      .link-card:hover .link-title,
-      .link-card:hover .link-desc,
-      .link-card:hover .link-index {
-        color: #000; /* Black text on red background */
-      }
-
-      /* Footer */
-      footer {
-        margin-top: 80px;
-        border-top: 1px solid var(--border-color);
-        padding-top: 20px;
-        color: var(--text-dim);
-        font-size: 0.65rem;
-        display: flex;
-        justify-content: space-between;
-      }
-
-      /* Animations */
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-
-      @keyframes slideUp {
-        from {
-          opacity: 0;
-          transform: translateY(16px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      /* Responsive */
-      @media (max-width: 600px) {
-        main {
-          padding: 60px 20px 40px;
-        }
-
-        .frame-container {
-          padding: 24px;
-        }
-
-        .links-grid { grid-template-columns: 1fr; }
-
-        h1 { font-size: 2rem; }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="vignette"></div>
-    <div class="grid-overlay"></div>
-    <div class="noise-overlay"></div>
-    <div class="scanlines"></div>
-
-    <main>
-      <div class="frame-container">
-        <div class="corner corner-tl"></div>
-        <div class="corner corner-tr"></div>
-        <div class="corner corner-bl"></div>
-        <div class="corner corner-br"></div>
-
-        <header>
-          <!-- <div class="section-label">WARNING: SYSTEM ACTIVE</div> -->
-          <h1>Artur A. Do Lago</h1>
-          <p class="subtitle">Knowledge work.</p>
-        </header>
-        
-        <div class="bio-section">
-          <h2>// Profile</h2>
-          <div class="bio-content">
-            <p>
-              Get to know my work and some of my thoughts and stories.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- <div class="divider"></div> -->
-
-      <section class="links-grid">
-        <a href="https://github.com/adolago" class="link-card" target="_blank">
-          <span class="link-title">GitHub</span>
-          <span class="link-index">A1</span>
-          <span class="link-desc">Open source contributions</span>
-        </a>
-        <a href="mailto:dolagoartur@gmail.com" class="link-card">
-          <span class="link-title">Contact</span>
-          <span class="link-index">A2</span>
-          <span class="link-desc">Get in touch</span>
-        </a>
-        <a href="https://www.linkedin.com/in/adolago/" class="link-card" target="_blank">
-          <span class="link-title">LinkedIn</span>
-          <span class="link-index">A3</span>
-          <span class="link-desc">Professional network</span>
-        </a>
-        <a href="#" class="link-card">
-          <span class="link-title">Writing</span>
-          <span class="link-index">A4</span>
-          <span class="link-desc">Thoughts & Essays</span>
-        </a>
-      </section>
-
-      <footer>
-        <span>build.2025.01.01</span>
-        <span>STATUS: ONLINE</span>
-      </footer>
-    </main>
-    <script src="js/fluid-simulation.js"></script>
-  </body>
 </html>

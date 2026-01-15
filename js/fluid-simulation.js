@@ -1,7 +1,7 @@
 /**
- * WebGL Fluid Simulation - x.ai Style
- * Based on Navier-Stokes equations for realistic fluid dynamics
- * Features: Mouse interaction, bloom glow, color gradients
+ * WebGL CFD Smoke Simulation
+ * Real Navier-Stokes fluid dynamics with smoke rising from bottom
+ * Only cursor interaction - no random splats
  */
 
 (function() {
@@ -17,41 +17,35 @@
         width: 100%;
         height: 100%;
         z-index: -2;
-        pointer-events: none;
+        pointer-events: auto;
     `;
     document.body.insertBefore(canvas, document.body.firstChild);
 
     // Configuration
     const config = {
         SIM_RESOLUTION: 128,
-        DYE_RESOLUTION: 1024,
-        CAPTURE_RESOLUTION: 512,
-        DENSITY_DISSIPATION: 0.97,
-        VELOCITY_DISSIPATION: 0.98,
-        PRESSURE: 0.8,
-        PRESSURE_ITERATIONS: 20,
-        CURL: 30,
-        SPLAT_RADIUS: 0.25,
-        SPLAT_FORCE: 6000,
-        SHADING: true,
-        COLORFUL: true,
-        COLOR_UPDATE_SPEED: 10,
-        PAUSED: false,
-        BACK_COLOR: { r: 3, g: 0, b: 5 }, // Match your dark theme
-        TRANSPARENT: false,
+        DYE_RESOLUTION: 512,
+        DENSITY_DISSIPATION: 0.5,        // Faster fade - more see-through smoke
+        VELOCITY_DISSIPATION: 0.95,      // Velocity fades, allowing spread
+        PRESSURE: 0.3,                   // Low pressure - lets smoke spread naturally
+        PRESSURE_ITERATIONS: 10,
+        CURL: 3.5,                        // Reduced turbulence
+        SPLAT_RADIUS: 3.0,                // Moderate width (cursor interaction)
+        SMOKE_RADIUS: 2.0,                // Wider plume
+        SMOKE_FORCE: 26,                  // Gentler upward push
+        SPLAT_FORCE: 4000,
+        SHADING: false,
+        BACK_COLOR: { r: 5, g: 8, b: 15 },  // Very dark navy
         BLOOM: true,
         BLOOM_ITERATIONS: 8,
         BLOOM_RESOLUTION: 256,
-        BLOOM_INTENSITY: 0.6,
-        BLOOM_THRESHOLD: 0.5,
-        BLOOM_SOFT_KNEE: 0.7,
-        SUNRAYS: false,
-        POINTER_COLOR: [
-            { r: 0.4, g: 0.2, b: 0.8 },   // Purple
-            { r: 0.2, g: 0.5, b: 0.9 },   // Blue
-            { r: 0.1, g: 0.6, b: 0.8 },   // Cyan
-            { r: 0.9, g: 0.3, b: 0.2 },   // Red-orange accent
-        ]
+        BLOOM_INTENSITY: 0.2,             // Subtle glow
+        BLOOM_THRESHOLD: 0.08,            // Higher threshold to reduce bloom
+        BLOOM_SOFT_KNEE: 0.8,
+        // Rising smoke buoyancy
+        SMOKE_BUOYANCY: 0.45,             // Gentler rise
+        // Dimmer smoke
+        SMOKE_COLOR: { r: 0.0016, g: 0.0024, b: 0.0042 },
     };
 
     function pointerPrototype() {
@@ -64,11 +58,10 @@
         this.deltaY = 0;
         this.down = false;
         this.moved = false;
-        this.color = [30, 0, 300];
+        this.color = { r: 0.2, g: 0.35, b: 0.7 }; // Navy blue cursor interaction
     }
 
     let pointers = [];
-    let splatStack = [];
     pointers.push(new pointerPrototype());
 
     const { gl, ext } = getWebGLContext(canvas);
@@ -80,12 +73,12 @@
     }
 
     function getWebGLContext(canvas) {
-        const params = { 
-            alpha: true, 
-            depth: false, 
-            stencil: false, 
-            antialias: false, 
-            preserveDrawingBuffer: false 
+        const params = {
+            alpha: true,
+            depth: false,
+            stencil: false,
+            antialias: false,
+            preserveDrawingBuffer: false
         };
 
         let gl = canvas.getContext('webgl2', params);
@@ -282,8 +275,6 @@
         varying vec2 vB;
         uniform sampler2D uTexture;
         uniform sampler2D uBloom;
-        uniform sampler2D uDithering;
-        uniform vec2 ditherScale;
         uniform vec2 texelSize;
 
         vec3 linearToGamma (vec3 color) {
@@ -392,12 +383,17 @@
         void main () {
             vec2 p = vUv - point.xy;
             p.x *= aspectRatio;
-            vec3 splat = exp(-dot(p, p) / radius) * color;
+
+            // Compact gaussian splat for a tighter plume
+            float falloff = exp(-dot(p, p) / (radius * 0.6));
+            vec3 splat = falloff * color;
+
             vec3 base = texture2D(uTarget, vUv).xyz;
             gl_FragColor = vec4(base + splat, 1.0);
         }
     `);
 
+    // Advection with buoyancy for smoke rising
     const advectionShader = compileShader(gl.FRAGMENT_SHADER, `
         precision highp float;
         precision highp sampler2D;
@@ -454,7 +450,8 @@
             vec2 C = texture2D(uVelocity, vUv).xy;
             if (vL.x < 0.0) { L = -C.x; }
             if (vR.x > 1.0) { R = -C.x; }
-            if (vT.y > 1.0) { T = -C.y; }
+            // Top is open - smoke flows out
+            if (vT.y > 1.0) { T = C.y; }
             if (vB.y < 0.0) { B = -C.y; }
 
             float div = 0.5 * (R - L + T - B);
@@ -557,6 +554,27 @@
         }
     `);
 
+    // Buoyancy shader - adds upward force based on density
+    const buoyancyShader = compileShader(gl.FRAGMENT_SHADER, `
+        precision highp float;
+        precision highp sampler2D;
+        varying vec2 vUv;
+        uniform sampler2D uVelocity;
+        uniform sampler2D uDensity;
+        uniform float buoyancy;
+        uniform float dt;
+
+        void main () {
+            vec2 vel = texture2D(uVelocity, vUv).xy;
+            float density = length(texture2D(uDensity, vUv).rgb);
+
+            // Add upward buoyancy force proportional to density
+            vel.y += density * buoyancy * dt;
+
+            gl_FragColor = vec4(vel, 0.0, 1.0);
+        }
+    `);
+
     const blit = (() => {
         gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
@@ -580,41 +598,6 @@
             gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
         };
     })();
-
-    // Dithering texture for smooth gradients
-    let ditheringTexture = createTextureAsync('./images/LDR_LLL1_0.png');
-
-    function createTextureAsync(url) {
-        let texture = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255]));
-
-        let obj = {
-            texture,
-            width: 1,
-            height: 1,
-            attach(id) {
-                gl.activeTexture(gl.TEXTURE0 + id);
-                gl.bindTexture(gl.TEXTURE_2D, texture);
-                return id;
-            }
-        };
-
-        let image = new Image();
-        image.onload = () => {
-            obj.width = image.width;
-            obj.height = image.height;
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
-        };
-        image.src = url;
-
-        return obj;
-    }
 
     // Program management
     function createProgram(vertexShader, fragmentShader) {
@@ -663,9 +646,10 @@
     const vorticityProgram = new Program(baseVertexShader, vorticityShader);
     const pressureProgram = new Program(baseVertexShader, pressureShader);
     const gradienSubtractProgram = new Program(baseVertexShader, gradientSubtractShader);
+    const buoyancyProgram = new Program(baseVertexShader, buoyancyShader);
 
     const displayMaterial = (() => {
-        let displayShader = compileShader(gl.FRAGMENT_SHADER, displayShaderSource, 
+        let displayShader = compileShader(gl.FRAGMENT_SHADER, displayShaderSource,
             (config.SHADING ? ['SHADING'] : []).concat(config.BLOOM ? ['BLOOM'] : []));
         return new Program(baseVertexShader, displayShader);
     })();
@@ -819,18 +803,23 @@
 
     initFramebuffers();
 
+    // Hot air emission state
+    let emitAccumulator = 0;
+
     // Animation
     let lastUpdateTime = Date.now();
-    let colorUpdateTimer = 0.0;
+    let time = 0;
 
     function update() {
         const dt = calcDeltaTime();
+        time += dt;
+
         if (resizeCanvas())
             initFramebuffers();
-        updateColors(dt);
+
         applyInputs();
-        if (!config.PAUSED)
-            step(dt);
+        emitSmoke(dt);
+        step(dt);
         render(null);
         requestAnimationFrame(update);
     }
@@ -859,22 +848,7 @@
         return Math.floor(input * pixelRatio);
     }
 
-    function updateColors(dt) {
-        if (!config.COLORFUL) return;
-
-        colorUpdateTimer += dt * config.COLOR_UPDATE_SPEED;
-        if (colorUpdateTimer >= 1) {
-            colorUpdateTimer = wrap(colorUpdateTimer, 0, 1);
-            pointers.forEach(p => {
-                p.color = generateColor();
-            });
-        }
-    }
-
     function applyInputs() {
-        if (splatStack.length > 0)
-            multipleSplats(splatStack.pop());
-
         pointers.forEach(p => {
             if (p.moved) {
                 p.moved = false;
@@ -883,15 +857,38 @@
         });
     }
 
+    // Emit soft billowing mist from single wide point
+    function emitSmoke(dt) {
+        const color = {
+            r: config.SMOKE_COLOR.r,
+            g: config.SMOKE_COLOR.g,
+            b: config.SMOKE_COLOR.b
+        };
+
+        // Emission sits just below the bottom edge for a below-frame source
+        splat(0.5, -0.02, 0, config.SMOKE_FORCE, color, config.SMOKE_RADIUS);
+    }
+
     function step(dt) {
         gl.disable(gl.BLEND);
         gl.viewport(0, 0, velocity.width, velocity.height);
 
+        // Apply buoyancy - smoke rises
+        buoyancyProgram.bind();
+        gl.uniform1i(buoyancyProgram.uniforms.uVelocity, velocity.read.attach(0));
+        gl.uniform1i(buoyancyProgram.uniforms.uDensity, dye.read.attach(1));
+        gl.uniform1f(buoyancyProgram.uniforms.buoyancy, config.SMOKE_BUOYANCY);
+        gl.uniform1f(buoyancyProgram.uniforms.dt, dt);
+        blit(velocity.write);
+        velocity.swap();
+
+        // Curl calculation
         curlProgram.bind();
         gl.uniform2f(curlProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
         gl.uniform1i(curlProgram.uniforms.uVelocity, velocity.read.attach(0));
         blit(curl);
 
+        // Vorticity confinement
         vorticityProgram.bind();
         gl.uniform2f(vorticityProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
         gl.uniform1i(vorticityProgram.uniforms.uVelocity, velocity.read.attach(0));
@@ -901,17 +898,20 @@
         blit(velocity.write);
         velocity.swap();
 
+        // Divergence
         divergenceProgram.bind();
         gl.uniform2f(divergenceProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
         gl.uniform1i(divergenceProgram.uniforms.uVelocity, velocity.read.attach(0));
         blit(divergence);
 
+        // Pressure clear
         clearProgram.bind();
         gl.uniform1i(clearProgram.uniforms.uTexture, pressure.read.attach(0));
         gl.uniform1f(clearProgram.uniforms.value, config.PRESSURE);
         blit(pressure.write);
         pressure.swap();
 
+        // Pressure solve (Jacobi iterations)
         pressureProgram.bind();
         gl.uniform2f(pressureProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
         gl.uniform1i(pressureProgram.uniforms.uDivergence, divergence.attach(0));
@@ -921,6 +921,7 @@
             pressure.swap();
         }
 
+        // Gradient subtraction (pressure projection)
         gradienSubtractProgram.bind();
         gl.uniform2f(gradienSubtractProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
         gl.uniform1i(gradienSubtractProgram.uniforms.uPressure, pressure.read.attach(0));
@@ -928,6 +929,7 @@
         blit(velocity.write);
         velocity.swap();
 
+        // Velocity advection
         advectionProgram.bind();
         gl.uniform2f(advectionProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
         if (!ext.supportLinearFiltering)
@@ -940,8 +942,8 @@
         blit(velocity.write);
         velocity.swap();
 
+        // Dye advection
         gl.viewport(0, 0, dye.width, dye.height);
-
         if (!ext.supportLinearFiltering)
             gl.uniform2f(advectionProgram.uniforms.dyeTexelSize, dye.texelSizeX, dye.texelSizeY);
         gl.uniform1i(advectionProgram.uniforms.uVelocity, velocity.read.attach(0));
@@ -955,7 +957,7 @@
         if (config.BLOOM)
             applyBloom(dye.read, bloom);
 
-        if (target == null || !config.TRANSPARENT) {
+        if (target == null) {
             gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
             gl.enable(gl.BLEND);
         } else {
@@ -982,9 +984,6 @@
         gl.uniform1i(displayMaterial.uniforms.uTexture, dye.read.attach(0));
         if (config.BLOOM) {
             gl.uniform1i(displayMaterial.uniforms.uBloom, bloom.attach(1));
-            gl.uniform1i(displayMaterial.uniforms.uDithering, ditheringTexture.attach(2));
-            let scale = getTextureScale(ditheringTexture, width, height);
-            gl.uniform2f(displayMaterial.uniforms.ditherScale, scale.x, scale.y);
         }
         blit(target);
     }
@@ -1044,28 +1043,15 @@
         splat(pointer.texcoordX, pointer.texcoordY, dx, dy, pointer.color);
     }
 
-    function multipleSplats(amount) {
-        for (let i = 0; i < amount; i++) {
-            const color = generateColor();
-            color.r *= 10.0;
-            color.g *= 10.0;
-            color.b *= 10.0;
-            const x = Math.random();
-            const y = Math.random();
-            const dx = 1000 * (Math.random() - 0.5);
-            const dy = 1000 * (Math.random() - 0.5);
-            splat(x, y, dx, dy, color);
-        }
-    }
-
-    function splat(x, y, dx, dy, color) {
+    function splat(x, y, dx, dy, color, radius) {
+        const splatRadius = typeof radius === 'number' ? radius : config.SPLAT_RADIUS;
         gl.viewport(0, 0, velocity.width, velocity.height);
         splatProgram.bind();
         gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0));
         gl.uniform1f(splatProgram.uniforms.aspectRatio, canvas.width / canvas.height);
         gl.uniform2f(splatProgram.uniforms.point, x, y);
         gl.uniform3f(splatProgram.uniforms.color, dx, dy, 0.0);
-        gl.uniform1f(splatProgram.uniforms.radius, correctRadius(config.SPLAT_RADIUS / 100.0));
+        gl.uniform1f(splatProgram.uniforms.radius, correctRadius(splatRadius / 100.0));
         blit(velocity.write);
         velocity.swap();
 
@@ -1083,40 +1069,25 @@
         return radius;
     }
 
-    // Event handlers
-    canvas.style.pointerEvents = 'auto';
-    canvas.addEventListener('mousedown', e => {
-        let posX = scaleByPixelRatio(e.offsetX);
-        let posY = scaleByPixelRatio(e.offsetY);
-        let pointer = pointers[0];
-        updatePointerDownData(pointer, 0, posX, posY);
-    });
-
+    // Event handlers - cursor only interaction
     canvas.addEventListener('mousemove', e => {
         let posX = scaleByPixelRatio(e.offsetX);
         let posY = scaleByPixelRatio(e.offsetY);
         let pointer = pointers[0];
-        if (!pointer.down) updatePointerMoveData(pointer, posX, posY);
-        else updatePointerMoveData(pointer, posX, posY);
-    });
-
-    window.addEventListener('mouseup', () => {
-        updatePointerUpData(pointers[0]);
+        updatePointerMoveData(pointer, posX, posY);
     });
 
     canvas.addEventListener('touchstart', e => {
         e.preventDefault();
         const touches = e.targetTouches;
-        while (pointers.length > touches.length)
-            pointers.pop();
         for (let i = 0; i < touches.length; i++) {
             if (i >= pointers.length)
                 pointers.push(new pointerPrototype());
             let posX = scaleByPixelRatio(touches[i].pageX);
             let posY = scaleByPixelRatio(touches[i].pageY);
-            updatePointerDownData(pointers[i], touches[i].identifier, posX, posY);
+            updatePointerMoveData(pointers[i], posX, posY);
         }
-    });
+    }, { passive: false });
 
     canvas.addEventListener('touchmove', e => {
         e.preventDefault();
@@ -1130,27 +1101,6 @@
         }
     }, { passive: false });
 
-    window.addEventListener('touchend', e => {
-        const touches = e.changedTouches;
-        for (let i = 0; i < touches.length; i++) {
-            let pointer = pointers.find(p => p.id == touches[i].identifier);
-            if (pointer) updatePointerUpData(pointer);
-        }
-    });
-
-    function updatePointerDownData(pointer, id, posX, posY) {
-        pointer.id = id;
-        pointer.down = true;
-        pointer.moved = false;
-        pointer.texcoordX = posX / canvas.width;
-        pointer.texcoordY = 1.0 - posY / canvas.height;
-        pointer.prevTexcoordX = pointer.texcoordX;
-        pointer.prevTexcoordY = pointer.texcoordY;
-        pointer.deltaX = 0;
-        pointer.deltaY = 0;
-        pointer.color = generateColor();
-    }
-
     function updatePointerMoveData(pointer, posX, posY) {
         pointer.prevTexcoordX = pointer.texcoordX;
         pointer.prevTexcoordY = pointer.texcoordY;
@@ -1159,10 +1109,6 @@
         pointer.deltaX = correctDeltaX(pointer.texcoordX - pointer.prevTexcoordX);
         pointer.deltaY = correctDeltaY(pointer.texcoordY - pointer.prevTexcoordY);
         pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
-    }
-
-    function updatePointerUpData(pointer) {
-        pointer.down = false;
     }
 
     function correctDeltaX(delta) {
@@ -1177,46 +1123,8 @@
         return delta;
     }
 
-    function generateColor() {
-        let c = HSVtoRGB(Math.random(), 0.8, 0.8);
-        c.r *= 0.15;
-        c.g *= 0.15;
-        c.b *= 0.15;
-        return c;
-    }
-
-    function HSVtoRGB(h, s, v) {
-        let r, g, b, i, f, p, q, t;
-        i = Math.floor(h * 6);
-        f = h * 6 - i;
-        p = v * (1 - s);
-        q = v * (1 - f * s);
-        t = v * (1 - (1 - f) * s);
-
-        switch (i % 6) {
-            case 0: r = v; g = t; b = p; break;
-            case 1: r = q; g = v; b = p; break;
-            case 2: r = p; g = v; b = t; break;
-            case 3: r = p; g = q; b = v; break;
-            case 4: r = t; g = p; b = v; break;
-            case 5: r = v; g = p; b = q; break;
-        }
-
-        return { r, g, b };
-    }
-
     function normalizeColor(input) {
         return { r: input.r / 255, g: input.g / 255, b: input.b / 255 };
-    }
-
-    function wrap(value, min, max) {
-        let range = max - min;
-        if (range == 0) return min;
-        return (value - min) % range + min;
-    }
-
-    function getTextureScale(texture, width, height) {
-        return { x: width / texture.width, y: height / texture.height };
     }
 
     window.addEventListener('resize', () => {
@@ -1224,26 +1132,14 @@
         initFramebuffers();
     });
 
-    // Initial splats for ambient effect
-    multipleSplats(parseInt(Math.random() * 20) + 5);
-
-    // Auto-generate splats periodically for ambient motion
-    setInterval(() => {
-        if (Math.random() < 0.3) {
-            const x = Math.random();
-            const y = Math.random();
-            const dx = 500 * (Math.random() - 0.5);
-            const dy = 500 * (Math.random() - 0.5);
-            const color = generateColor();
-            color.r *= 5.0;
-            color.g *= 5.0;
-            color.b *= 5.0;
-            splat(x, y, dx, dy, color);
-        }
-    }, 2000);
+    // Respect reduced motion preference
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        config.SMOKE_BUOYANCY = 0.25;
+        config.CURL = 2.8;
+    }
 
     // Start animation
     update();
 
-    console.log('x.ai-style WebGL Fluid Simulation initialized');
+    console.log('CFD Hot Air initialized - narrow plume source, subtle fading smoke');
 })();
