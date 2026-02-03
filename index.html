@@ -16,7 +16,43 @@
             --accent: #4884D4;
             --bg: #121212;
         }
-        
+
+        /* Metallic text effect — light from upper-right matching the torus knot */
+        @keyframes metallic-shimmer {
+            0% { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+
+        .metallic-text {
+            background: linear-gradient(
+                135deg,
+                #060D18 0%,
+                #0A1628 5%,
+                #0E1F3B 10%,
+                #0A1628 16%,
+                #0E1F3B 22%,
+                #132D55 28%,
+                #0E1F3B 33%,
+                #132D55 38%,
+                #1E4A7A 42%,
+                #2B6090 45%,
+                #1E4A7A 48%,
+                #132D55 52%,
+                #0E1F3B 58%,
+                #0A1628 64%,
+                #0E1F3B 70%,
+                #132D55 76%,
+                #0E1F3B 82%,
+                #0A1628 90%,
+                #060D18 100%
+            );
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: metallic-shimmer 8s ease-in-out infinite;
+        }
+
         body {
             background: var(--bg);
             color: var(--primary);
@@ -72,12 +108,8 @@
             letter-spacing: 0.12em;
             text-decoration: none;
             text-transform: uppercase;
-            background: linear-gradient(135deg, #4884D4 0%, #193C72 50%, #0E1F3B 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
-        
+
         nav {
             display: flex;
             gap: 2rem;
@@ -93,7 +125,21 @@
         }
         
         nav a:hover {
-            color: var(--primary);
+            background: linear-gradient(
+                135deg,
+                #0A1628 0%,
+                #0E1F3B 20%,
+                #1E4A7A 45%,
+                #2B6090 50%,
+                #1E4A7A 55%,
+                #0E1F3B 80%,
+                #0A1628 100%
+            );
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: metallic-shimmer 4s ease-in-out infinite;
         }
         
         .hero {
@@ -115,10 +161,6 @@
             margin-bottom: 2rem;
             padding: 0.2em 1rem;
             text-transform: uppercase;
-            background: linear-gradient(135deg, #4884D4 0%, #193C72 50%, #0E1F3B 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
             overflow: visible;
         }
         
@@ -151,25 +193,38 @@
         }
         
         .btn-primary {
-            background: var(--primary);
-            color: var(--bg);
-            border: 1px solid var(--primary);
+            background: linear-gradient(
+                135deg,
+                #060D18 0%, #0A1628 10%, #0E1F3B 25%,
+                #1E4A7A 42%, #2B6090 50%, #1E4A7A 58%,
+                #0E1F3B 75%, #0A1628 90%, #060D18 100%
+            );
+            background-size: 200% 100%;
+            color: #8BB8F0;
+            border: 1px solid #132D55;
+            animation: metallic-shimmer 6s ease-in-out infinite;
         }
-        
+
         .btn-primary:hover {
-            background: transparent;
-            color: var(--primary);
+            background: linear-gradient(
+                135deg,
+                #060D18 0%, #0E1F3B 15%, #132D55 30%,
+                #2B6090 45%, #3A7AB0 50%, #2B6090 55%,
+                #132D55 70%, #0E1F3B 85%, #060D18 100%
+            );
+            background-size: 200% 100%;
+            color: #A8CFFA;
+            animation: metallic-shimmer 3s ease-in-out infinite;
         }
-        
+
         .btn-secondary {
             background: transparent;
-            color: var(--primary);
-            border: 1px solid rgba(255,255,255,0.25);
+            border: 1px solid #132D55;
         }
-        
+
         .btn-secondary:hover {
-            border-color: var(--primary);
-            background: rgba(255,255,255,0.05);
+            border-color: #1E4A7A;
+            background: rgba(30, 74, 122, 0.1);
         }
         
         .scroll-indicator {
@@ -208,9 +263,8 @@
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.2em;
-            color: var(--accent);
             margin-bottom: 1rem;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
         }
@@ -223,6 +277,7 @@
             font-weight: 400;
             margin-bottom: 3rem;
             letter-spacing: -0.02em;
+            display: inline-block;
         }
         
         .cards {
@@ -233,15 +288,15 @@
         
         .card {
             background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(72, 132, 212, 0.12);
             border-radius: 16px;
             padding: 2rem;
             transition: all 0.3s ease;
         }
-        
+
         .card:hover {
-            background: rgba(255,255,255,0.06);
-            border-color: rgba(255,255,255,0.15);
+            background: rgba(72, 132, 212, 0.05);
+            border-color: rgba(72, 132, 212, 0.3);
             transform: translateY(-4px);
         }
         
@@ -267,7 +322,7 @@
         }
         
         footer {
-            border-top: 1px solid rgba(255,255,255,0.08);
+            border-top: 1px solid rgba(72, 132, 212, 0.15);
             padding: 4rem 2rem;
             text-align: center;
         }
@@ -288,7 +343,21 @@
         }
         
         .social-links a:hover {
-            color: var(--primary);
+            background: linear-gradient(
+                135deg,
+                #0A1628 0%,
+                #0E1F3B 20%,
+                #1E4A7A 45%,
+                #2B6090 50%,
+                #1E4A7A 55%,
+                #0E1F3B 80%,
+                #0A1628 100%
+            );
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: metallic-shimmer 4s ease-in-out infinite;
         }
         
         footer .copyright {
@@ -310,13 +379,11 @@
             z-index: 1;
             opacity: 0.85;
             pointer-events: auto;
-            overflow: visible;
+            overflow: hidden;
         }
 
         #metallic-accent canvas {
             display: block;
-            width: 100%;
-            height: 100%;
         }
 
         @media (max-width: 768px) {
@@ -332,7 +399,7 @@
     <div class="content">
         <header>
             <div class="brand">
-                <a href="/" class="logo">Artur Do Lago</a>
+                <a href="/" class="logo metallic-text">Artur Do Lago</a>
                 <div id="metallic-accent"></div>
             </div>
             <nav>
@@ -349,7 +416,7 @@
             </p>
             <div class="cta-group">
                 <a href="#work" class="btn btn-primary">View Work</a>
-                <a href="#contact" class="btn btn-secondary">Get in Touch</a>
+                <a href="#contact" class="btn btn-secondary metallic-text">Get in Touch</a>
             </div>
             <div class="scroll-indicator">
                 <span>Scroll</span>
@@ -360,37 +427,37 @@
         </section>
         
         <section id="work">
-            <div class="section-label">Projects</div>
-            <h2>Selected Work</h2>
+            <div class="section-label metallic-text">Projects</div>
+            <h2 class="metallic-text">Selected Work</h2>
             <div class="cards">
                 <div class="card">
                     <span class="tag">Web Application</span>
-                    <h3>Project Alpha</h3>
+                    <h3 class="metallic-text">Project Alpha</h3>
                     <p>A high-performance platform built with modern technologies, serving millions of users worldwide.</p>
                 </div>
                 <div class="card">
                     <span class="tag">Open Source</span>
-                    <h3>Developer Tools</h3>
+                    <h3 class="metallic-text">Developer Tools</h3>
                     <p>Contributing to the open-source ecosystem with tools that enhance developer productivity.</p>
                 </div>
                 <div class="card">
                     <span class="tag">Creative</span>
-                    <h3>Interactive Experiences</h3>
+                    <h3 class="metallic-text">Interactive Experiences</h3>
                     <p>WebGL experiments and creative coding projects exploring the boundaries of web technology.</p>
                 </div>
             </div>
         </section>
         
         <section id="about">
-            <div class="section-label">About</div>
-            <h2>Building the Future</h2>
+            <div class="section-label metallic-text">About</div>
+            <h2 class="metallic-text">Building the Future</h2>
             <div class="cards">
                 <div class="card">
-                    <h3>Philosophy</h3>
+                    <h3 class="metallic-text">Philosophy</h3>
                     <p>I believe in crafting software that not only works flawlessly but feels intuitive and delightful to use. Every line of code is an opportunity to create something meaningful.</p>
                 </div>
                 <div class="card">
-                    <h3>Expertise</h3>
+                    <h3 class="metallic-text">Expertise</h3>
                     <p>Full-stack development, system architecture, creative coding, and everything in between. Always learning, always building.</p>
                 </div>
             </div>
