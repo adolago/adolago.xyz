@@ -75,6 +75,23 @@
 
     fitCameraToMesh();
 
+    // MOUSE TRACKING
+    const mouse = { x: 0, y: 0, active: false };
+    const smoothMouse = { x: 0, y: 0 };
+    const lerpFactor = 0.05;
+    const tiltStrength = 0.4;
+
+    container.addEventListener('mousemove', function(e) {
+        const rect = container.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+        mouse.active = true;
+    });
+
+    container.addEventListener('mouseleave', function() {
+        mouse.active = false;
+    });
+
     // ANIMATION LOOP
     const clock = new THREE.Clock();
 
@@ -83,9 +100,15 @@
 
         const time = clock.getElapsedTime();
 
-        // Gentle rotation
-        mesh.rotation.x = time * 0.3;
-        mesh.rotation.y = time * 0.15;
+        // Smoothly interpolate toward target (or back to zero when inactive)
+        const targetX = mouse.active ? mouse.y * tiltStrength : 0;
+        const targetY = mouse.active ? mouse.x * tiltStrength : 0;
+        smoothMouse.x += (targetX - smoothMouse.x) * lerpFactor;
+        smoothMouse.y += (targetY - smoothMouse.y) * lerpFactor;
+
+        // Blend auto-rotation with cursor tilt
+        mesh.rotation.x = time * 0.3 + smoothMouse.x;
+        mesh.rotation.y = time * 0.15 + smoothMouse.y;
 
         renderer.render(scene, camera);
     }
