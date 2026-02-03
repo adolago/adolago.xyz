@@ -53,8 +53,16 @@
             padding: 1.5rem 2rem;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.35rem;
+            width: max-content;
         }
         
         .logo {
@@ -293,6 +301,29 @@
             nav { display: none; }
             section { padding: 4rem 1.5rem; }
         }
+
+        /* Metallic Accent Container */
+        #metallic-accent {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            z-index: 1;
+            opacity: 0.85;
+            pointer-events: none; /* Let clicks pass through */
+            overflow: visible;
+        }
+
+        #metallic-accent canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        @media (max-width: 768px) {
+            #metallic-accent {
+                height: 80px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -300,7 +331,10 @@
     
     <div class="content">
         <header>
-            <a href="/" class="logo">Artur Do Lago</a>
+            <div class="brand">
+                <a href="/" class="logo">Artur Do Lago</a>
+                <div id="metallic-accent"></div>
+            </div>
             <nav>
                 <a href="#work">Work</a>
                 <a href="#about">About</a>
@@ -373,6 +407,7 @@
         </footer>
     </div>
 
+    <!-- Existing Smoke Script -->
     <script>
     const canvas = document.getElementById('smoke');
     const gl = canvas.getContext('webgl', { alpha: false, antialias: true }) 
@@ -658,5 +693,9 @@
     
     render();
     </script>
+    
+    <!-- Three.js for Metallic Accent -->
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script src="js/metallic-accent.js"></script>
 </body>
 </html>
