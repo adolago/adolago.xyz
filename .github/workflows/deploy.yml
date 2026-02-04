@@ -101,7 +101,7 @@ jobs:
           ssh dmz-gateway 'sudo chown -R caddy:caddy /var/www/html'
 
           echo "Refreshing status endpoint..."
-          ssh dmz-gateway 'if [ -x /usr/local/bin/adolago-site-status-update ]; then sudo /usr/local/bin/adolago-site-status-update; fi'
+          ssh dmz-gateway 'if [ -x /usr/local/bin/adolago-site-status-update ]; then sudo /usr/local/bin/adolago-site-status-update || true; fi'
 
           echo "Reloading Caddy..."
           ssh dmz-gateway 'sudo systemctl reload caddy'
