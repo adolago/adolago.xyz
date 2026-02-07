@@ -476,6 +476,56 @@
             display: block;
         }
 
+        .uptime-chart {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            height: 34px;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .uptime-chart .bar {
+            flex: 1;
+            min-width: 0;
+            border-radius: 2px;
+            height: 100%;
+            transition: opacity 0.2s;
+            cursor: default;
+        }
+
+        .uptime-chart .bar.up { background: #3DDC97; }
+        .uptime-chart .bar.degraded { background: #F5A623; }
+        .uptime-chart .bar.down { background: #FF5C5C; }
+        .uptime-chart .bar.no-data { background: rgba(255,255,255,0.08); }
+        .uptime-chart .bar:hover { opacity: 0.7; }
+
+        .uptime-tooltip {
+            position: absolute;
+            top: -2.2rem;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.04em;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .uptime-chart-meta {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+        }
+
         @media (max-width: 900px) {
             header { padding: 1rem; }
             nav { display: none; }
@@ -542,6 +592,16 @@
                     <div class="uptime-meta">
                         <span id="edge-uptime-text" data-edge-uptime-text>Uptime: --</span>
                         <span id="edge-updated-at" data-edge-updated-at>Updated: --</span>
+                    </div>
+                </div>
+                <div class="card" style="grid-column: 1 / -1;">
+                    <span class="tag">90 days</span>
+                    <h3 class="metallic-text">Uptime history</h3>
+                    <div class="uptime-chart" data-uptime-chart aria-label="90-day uptime history"></div>
+                    <div class="uptime-chart-meta">
+                        <span>90 days ago</span>
+                        <span data-uptime-avg></span>
+                        <span>Today</span>
                     </div>
                 </div>
             </div>
@@ -922,5 +982,6 @@
     <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
     <script src="js/metallic-accent.js"></script>
     <script src="js/homelab-status.js"></script>
+    <script src="js/uptime-graph.js"></script>
 </body>
 </html>
