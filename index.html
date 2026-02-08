@@ -14,43 +14,44 @@
             --primary: #e8eef5;
             --secondary: rgba(255,255,255,0.5);
             --accent: #4884D4;
-            --bg: #121212;
+            --bg: #000000;
         }
 
-        /* Metallic text effect - light from upper-right matching the torus knot */
-        @keyframes metallic-shimmer {
-            0% { background-position: 200% center; }
-            100% { background-position: -200% center; }
-        }
-
+        /* Metallic text - two blended gradients for multi-directional reflection.
+           No white. Brightest = #b0dcf4. Darkest = #2a5a88. Always readable. */
         .metallic-text {
-            background: linear-gradient(
-                135deg,
-                #060D18 0%,
-                #0A1628 5%,
-                #0E1F3B 10%,
-                #0A1628 16%,
-                #0E1F3B 22%,
-                #132D55 28%,
-                #0E1F3B 33%,
-                #132D55 38%,
-                #1E4A7A 42%,
-                #2B6090 45%,
-                #1E4A7A 48%,
-                #132D55 52%,
-                #0E1F3B 58%,
-                #0A1628 64%,
-                #0E1F3B 70%,
-                #132D55 76%,
-                #0E1F3B 82%,
-                #0A1628 90%,
-                #060D18 100%
-            );
-            background-size: 200% 100%;
+            background:
+                linear-gradient(
+                    178deg,
+                    #2a5a88 0%,
+                    #4a8ab8 12%,
+                    #7ab8dc 20%,
+                    #a8d4f0 26%,
+                    #7ab8dc 32%,
+                    #4a7aa8 42%,
+                    #305a88 50%,
+                    #4a7aa8 58%,
+                    #7ab8dc 68%,
+                    #a8d4f0 74%,
+                    #7ab8dc 80%,
+                    #4a8ab8 88%,
+                    #2a5a88 100%
+                ),
+                linear-gradient(
+                    95deg,
+                    #305a88 0%,
+                    #5a96c0 20%,
+                    #80b8dc 35%,
+                    #b0dcf4 50%,
+                    #80b8dc 65%,
+                    #5a96c0 80%,
+                    #305a88 100%
+                );
+            background-blend-mode: screen;
+            background-size: 100% 100%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: metallic-shimmer 8s ease-in-out infinite;
         }
 
         body {
@@ -127,13 +128,15 @@
         nav a:hover {
             background: linear-gradient(
                 135deg,
-                #0A1628 0%,
-                #0E1F3B 20%,
-                #1E4A7A 45%,
-                #2B6090 50%,
-                #1E4A7A 55%,
-                #0E1F3B 80%,
-                #0A1628 100%
+                #0a1628 0%,
+                #132d55 20%,
+                #2668a8 40%,
+                #5bb0f0 48%,
+                #8ccbff 50%,
+                #5bb0f0 52%,
+                #2668a8 60%,
+                #132d55 80%,
+                #0a1628 100%
             );
             background-size: 200% 100%;
             -webkit-background-clip: text;
@@ -199,36 +202,37 @@
         .btn-primary {
             background: linear-gradient(
                 135deg,
-                #060D18 0%, #0A1628 10%, #0E1F3B 25%,
-                #1E4A7A 42%, #2B6090 50%, #1E4A7A 58%,
-                #0E1F3B 75%, #0A1628 90%, #060D18 100%
+                #04080f 0%, #0a1628 10%, #0d2350 22%,
+                #1a4a7a 36%, #2668a8 44%, #3a8fd4 50%, #2668a8 56%,
+                #1a4a7a 64%, #0d2350 78%, #0a1628 90%, #04080f 100%
             );
             background-size: 200% 100%;
-            color: #8BB8F0;
-            border: 1px solid #132D55;
+            color: #8ccbff;
+            border: 1px solid #1a4a7a;
             animation: metallic-shimmer 6s ease-in-out infinite;
         }
 
         .btn-primary:hover {
             background: linear-gradient(
                 135deg,
-                #060D18 0%, #0E1F3B 15%, #132D55 30%,
-                #2B6090 45%, #3A7AB0 50%, #2B6090 55%,
-                #132D55 70%, #0E1F3B 85%, #060D18 100%
+                #04080f 0%, #0d2350 12%, #1a4a7a 26%,
+                #2668a8 38%, #5bb0f0 46%, #8ccbff 50%, #5bb0f0 54%,
+                #2668a8 62%, #1a4a7a 74%, #0d2350 88%, #04080f 100%
             );
             background-size: 200% 100%;
-            color: #A8CFFA;
+            color: #b8e4ff;
+            border-color: #2668a8;
             animation: metallic-shimmer 3s ease-in-out infinite;
         }
 
         .btn-secondary {
             background: transparent;
-            border: 1px solid #132D55;
+            border: 1px solid #1a4a7a;
         }
 
         .btn-secondary:hover {
-            border-color: #1E4A7A;
-            background: rgba(30, 74, 122, 0.1);
+            border-color: #2668a8;
+            background: rgba(38, 104, 168, 0.1);
         }
         
         .scroll-indicator {
@@ -264,7 +268,7 @@
         }
         
         .section-label {
-            font-size: 0.9rem;
+            font-size: 1.2rem;
             text-transform: uppercase;
             letter-spacing: 0.2em;
             margin-bottom: 1rem;
@@ -308,17 +312,18 @@
         }
         
         .card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(72, 132, 212, 0.12);
+            background: rgba(10, 22, 40, 0.4);
+            border: 1px solid rgba(38, 104, 168, 0.15);
             border-radius: 16px;
             padding: 2rem;
             transition: all 0.3s ease;
         }
 
         .card:hover {
-            background: rgba(72, 132, 212, 0.05);
-            border-color: rgba(72, 132, 212, 0.3);
+            background: rgba(26, 74, 122, 0.08);
+            border-color: rgba(91, 176, 240, 0.3);
             transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(26, 74, 122, 0.12);
         }
         
         .card h3 {
@@ -352,8 +357,8 @@
         }
 
         .card-link:hover {
-            color: #8BB8F0;
-            border-color: #8BB8F0;
+            color: #8ccbff;
+            border-color: #8ccbff;
         }
 
         .card-link.placeholder {
@@ -395,7 +400,7 @@
             height: 10px;
             border-radius: 999px;
             background: rgba(255,255,255,0.35);
-            box-shadow: 0 0 0 3px rgba(72, 132, 212, 0.12);
+            box-shadow: 0 0 0 3px rgba(38, 104, 168, 0.15);
             flex: 0 0 auto;
         }
 
@@ -410,7 +415,7 @@
         }
         
         footer {
-            border-top: 1px solid rgba(72, 132, 212, 0.15);
+            border-top: 1px solid rgba(38, 104, 168, 0.15);
             padding: 4rem 2rem;
             text-align: center;
         }
@@ -433,13 +438,15 @@
         .social-links a:hover {
             background: linear-gradient(
                 135deg,
-                #0A1628 0%,
-                #0E1F3B 20%,
-                #1E4A7A 45%,
-                #2B6090 50%,
-                #1E4A7A 55%,
-                #0E1F3B 80%,
-                #0A1628 100%
+                #0a1628 0%,
+                #132d55 20%,
+                #2668a8 40%,
+                #5bb0f0 48%,
+                #8ccbff 50%,
+                #5bb0f0 52%,
+                #2668a8 60%,
+                #132d55 80%,
+                #0a1628 100%
             );
             background-size: 200% 100%;
             -webkit-background-clip: text;
@@ -463,9 +470,9 @@
         #metallic-accent {
             position: relative;
             width: 100%;
-            height: 120px;
+            height: 150px;
             z-index: 1;
-            opacity: 0.85;
+            opacity: 1;
             pointer-events: auto;
             overflow: hidden;
         }
@@ -497,7 +504,7 @@
                 <a href="#connect">Connect</a>
             </nav>
         </header>
-        
+
         <section class="hero" id="home">
             <h1 class="metallic-text">From Bits to Bytes to Cash Flow</h1>
             <p class="description">
