@@ -14,40 +14,23 @@
             --primary: #e8eef5;
             --secondary: rgba(255,255,255,0.5);
             --accent: #4884D4;
-            --bg: #000000;
+            --bg: #121212;
         }
 
-        /* Metallic text - two blended gradients for multi-directional reflection.
-           No white. Brightest = #b0dcf4. Darkest = #2a5a88. Always readable. */
+        /* Metallic navy text - diagonal bands matching knot palette.
+           135deg so each text line gets its own highlight sweep. */
         .metallic-text {
-            background:
-                linear-gradient(
-                    178deg,
-                    #2a5a88 0%,
-                    #4a8ab8 12%,
-                    #7ab8dc 20%,
-                    #a8d4f0 26%,
-                    #7ab8dc 32%,
-                    #4a7aa8 42%,
-                    #305a88 50%,
-                    #4a7aa8 58%,
-                    #7ab8dc 68%,
-                    #a8d4f0 74%,
-                    #7ab8dc 80%,
-                    #4a8ab8 88%,
-                    #2a5a88 100%
-                ),
-                linear-gradient(
-                    95deg,
-                    #305a88 0%,
-                    #5a96c0 20%,
-                    #80b8dc 35%,
-                    #b0dcf4 50%,
-                    #80b8dc 65%,
-                    #5a96c0 80%,
-                    #305a88 100%
-                );
-            background-blend-mode: screen;
+            background: linear-gradient(
+                135deg,
+                #193C72 0%,
+                #4884D4 15%,
+                #193C72 30%,
+                #2a5a90 45%,
+                #4884D4 55%,
+                #193C72 70%,
+                #3068A8 85%,
+                #4884D4 100%
+            );
             background-size: 100% 100%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -91,7 +74,7 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            background: linear-gradient(to bottom, rgba(18,18,18,0.9), transparent);
         }
 
         .brand {
@@ -128,23 +111,7 @@
         }
 
         nav a:hover {
-            background: linear-gradient(
-                135deg,
-                #0a1628 0%,
-                #132d55 20%,
-                #2668a8 40%,
-                #5bb0f0 48%,
-                #8ccbff 50%,
-                #5bb0f0 52%,
-                #2668a8 60%,
-                #132d55 80%,
-                #0a1628 100%
-            );
-            background-size: 200% 100%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: metallic-shimmer 4s ease-in-out infinite;
+            color: #4884D4;
         }
 
         .hero {
@@ -197,39 +164,25 @@
         }
 
         .btn-primary {
-            background: linear-gradient(
-                135deg,
-                #04080f 0%, #0a1628 10%, #0d2350 22%,
-                #1a4a7a 36%, #2668a8 44%, #3a8fd4 50%, #2668a8 56%,
-                #1a4a7a 64%, #0d2350 78%, #0a1628 90%, #04080f 100%
-            );
-            background-size: 200% 100%;
-            color: #8ccbff;
-            border: 1px solid #1a4a7a;
-            animation: metallic-shimmer 6s ease-in-out infinite;
+            background: #0E1F3B;
+            color: #4884D4;
+            border: 1px solid #193C72;
         }
 
         .btn-primary:hover {
-            background: linear-gradient(
-                135deg,
-                #04080f 0%, #0d2350 12%, #1a4a7a 26%,
-                #2668a8 38%, #5bb0f0 46%, #8ccbff 50%, #5bb0f0 54%,
-                #2668a8 62%, #1a4a7a 74%, #0d2350 88%, #04080f 100%
-            );
-            background-size: 200% 100%;
-            color: #b8e4ff;
-            border-color: #2668a8;
-            animation: metallic-shimmer 3s ease-in-out infinite;
+            background: #193C72;
+            color: #4884D4;
+            border-color: #4884D4;
         }
 
         .btn-secondary {
             background: transparent;
-            border: 1px solid #1a4a7a;
+            border: 1px solid #193C72;
         }
 
         .btn-secondary:hover {
-            border-color: #2668a8;
-            background: rgba(38, 104, 168, 0.1);
+            border-color: #4884D4;
+            background: rgba(72, 132, 212, 0.08);
         }
 
         section {
@@ -275,18 +228,18 @@
         }
 
         .card {
-            background: rgba(10, 22, 40, 0.4);
-            border: 1px solid rgba(38, 104, 168, 0.15);
+            background: rgba(14, 31, 59, 0.4);
+            border: 1px solid rgba(25, 60, 114, 0.2);
             border-radius: 16px;
             padding: 2rem;
             transition: all 0.3s ease;
         }
 
         .card:hover {
-            background: rgba(26, 74, 122, 0.08);
-            border-color: rgba(91, 176, 240, 0.3);
+            background: rgba(25, 60, 114, 0.12);
+            border-color: rgba(72, 132, 212, 0.3);
             transform: translateY(-4px);
-            box-shadow: 0 8px 32px rgba(26, 74, 122, 0.12);
+            box-shadow: 0 8px 32px rgba(14, 31, 59, 0.25);
         }
 
         .card h3 {
@@ -320,8 +273,8 @@
         }
 
         .card-link:hover {
-            color: #8ccbff;
-            border-color: #8ccbff;
+            color: #4884D4;
+            border-color: #4884D4;
         }
 
         .card .tag {
@@ -364,7 +317,7 @@
             height: 11px;
             border-radius: 999px;
             background: rgba(255,255,255,0.35);
-            box-shadow: 0 0 0 3px rgba(38, 104, 168, 0.15);
+            box-shadow: 0 0 0 3px rgba(25, 60, 114, 0.2);
             flex: 0 0 auto;
         }
 
@@ -440,27 +393,11 @@
         }
 
         .social-links a:hover {
-            background: linear-gradient(
-                135deg,
-                #0a1628 0%,
-                #132d55 20%,
-                #2668a8 40%,
-                #5bb0f0 48%,
-                #8ccbff 50%,
-                #5bb0f0 52%,
-                #2668a8 60%,
-                #132d55 80%,
-                #0a1628 100%
-            );
-            background-size: 200% 100%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: metallic-shimmer 4s ease-in-out infinite;
+            color: #4884D4;
         }
 
         footer {
-            border-top: 1px solid rgba(38, 104, 168, 0.15);
+            border-top: 1px solid rgba(25, 60, 114, 0.2);
             padding: 4rem 2rem;
             text-align: center;
         }
