@@ -55,7 +55,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 0;
+            z-index: -1;
         }
         
         .content {
@@ -418,6 +418,127 @@
             display: block;
         }
 
+        .pill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--primary);
+            border: 1px solid rgba(38, 104, 168, 0.3);
+            padding: 0.5rem 0.9rem;
+            border-radius: 999px;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            margin: 0.25rem 0 1.25rem;
+        }
+
+        .status-title {
+            font-size: 1.15rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .status-subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+        }
+
+        .uptime-meter {
+            height: 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(38, 104, 168, 0.2);
+            overflow: hidden;
+            margin-top: 0.75rem;
+        }
+
+        .uptime-meter-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(
+                90deg,
+                rgba(38, 104, 168, 0.4),
+                rgba(140, 203, 255, 0.72)
+            );
+            transition: width 0.6s ease;
+        }
+
+        .uptime-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.45);
+        }
+
+        .uptime-chart {
+            display: flex;
+            gap: 2px;
+            align-items: flex-end;
+            height: 34px;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .uptime-chart .bar {
+            flex: 1;
+            min-width: 0;
+            border-radius: 2px;
+            height: 100%;
+            transition: opacity 0.2s;
+            cursor: default;
+        }
+
+        .uptime-chart .bar.up { background: #3DDC97; }
+        .uptime-chart .bar.degraded { background: #F5A623; }
+        .uptime-chart .bar.down { background: #FF5C5C; }
+        .uptime-chart .bar.no-data { background: rgba(255,255,255,0.08); }
+        .uptime-chart .bar:hover { opacity: 0.7; }
+
+        .uptime-tooltip {
+            position: absolute;
+            top: -2.2rem;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.04em;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .uptime-chart-meta {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+        }
+
         @media (max-width: 768px) {
             #metallic-accent {
                 height: 80px;
@@ -437,7 +558,8 @@
             <nav>
                 <a href="#about">About</a>
                 <a href="#philosophy">Philosophy</a>
-                <a href="#observability">Observability</a>
+                <a href="#homelab">Homelab</a>
+                <a href="#projects">Projects</a>
                 <a href="#connect">Connect</a>
             </nav>
         </header>
@@ -474,7 +596,7 @@
 
         <section id="philosophy">
             <div class="section-label metallic-text">Personal Philosophy</div>
-            <h2 class="metallic-text">Curiosity, discipline, honesty</h2>
+            <h2 class="metallic-text">Curiosity, applied knowledge, discipline</h2>
             <div class="story">
                 <p>I like small bets, clear feedback, and real constraints.</p>
             </div>
@@ -491,24 +613,153 @@
             </div>
         </section>
 
-        <section id="observability">
+        <section id="homelab">
+            <div class="section-label metallic-text">Homelab</div>
+            <h2 class="metallic-text">Small stack, big lessons</h2>
+            <div class="story">
+                <p>A private-first stack I run at home. A place to learn, keep things stable, and build a few useful services.</p>
+            </div>
+
+            <div class="cards">
+                <div class="card" aria-live="polite">
+                    <span class="tag">Status</span>
+                    <div class="status-row">
+                        <span class="status-dot" id="edge-status-dot" data-edge-status-dot></span>
+                        <div>
+                            <div class="status-title metallic-text" id="edge-status-title" data-edge-status-title>Checking…</div>
+                            <div class="status-subtitle" id="edge-status-subtitle" data-edge-status-subtitle>Fetching /api/status.json</div>
+                        </div>
+                    </div>
+                    <div class="uptime-meter" aria-hidden="true">
+                        <div class="uptime-meter-fill" id="edge-uptime-fill" data-edge-uptime-fill></div>
+                    </div>
+                    <div class="uptime-meta">
+                        <span id="edge-uptime-text" data-edge-uptime-text>Uptime: --</span>
+                        <span id="edge-updated-at" data-edge-updated-at>Updated: --</span>
+                    </div>
+                </div>
+                <div class="card" style="grid-column: 1 / -1;">
+                    <span class="tag">90 days</span>
+                    <h3 class="metallic-text">Uptime history</h3>
+                    <div class="uptime-chart" data-uptime-chart aria-label="90-day uptime history"></div>
+                    <div class="uptime-chart-meta">
+                        <span>90 days ago</span>
+                        <span data-uptime-avg></span>
+                        <span>Today</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="network">
+            <div class="section-label metallic-text">Network</div>
+            <h2 class="metallic-text">Dual-port 10G upgrade</h2>
+            <div class="story">
+                <p>Intel X550-T2 dual-port 10GBase-T NIC split into two dedicated lanes: storage and uplink.</p>
+            </div>
+            <div class="cards">
+                <div class="card">
+                    <span class="tag">Storage lane</span>
+                    <h3 class="metallic-text">10GbE point-to-point</h3>
+                    <p>Dedicated NAS ↔ workstation link on its own /30 subnet. Measured at ~9.3 Gbit/s with iperf3.</p>
+                </div>
+                <div class="card">
+                    <span class="tag">Uplink lane</span>
+                    <h3 class="metallic-text">Core services uplink</h3>
+                    <p>Second port bridged to the core VM so containers and updates don't fight the management interface.</p>
+                </div>
+                <div class="card">
+                    <span class="tag">Stability</span>
+                    <h3 class="metallic-text">No more renumbering</h3>
+                    <p>Interface names pinned by MAC on the host so adding PCIe cards doesn't shuffle NIC names.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="infrastructure">
+            <div class="section-label metallic-text">Infrastructure</div>
+            <h2 class="metallic-text">Build small, document everything</h2>
+            <div class="story">
+                <p>Keep the edge small, prefer boring tools, and write things down.</p>
+                <div class="pill-list">
+                    <span class="pill">Proxmox</span>
+                    <span class="pill">Docker</span>
+                    <span class="pill">Caddy</span>
+                    <span class="pill">Cloudflare Tunnel</span>
+                    <span class="pill">ZFS</span>
+                    <span class="pill">TrueNAS</span>
+                    <span class="pill">Prometheus</span>
+                    <span class="pill">Grafana</span>
+                    <span class="pill">Loki</span>
+                </div>
+            </div>
+            <div class="cards">
+                <div class="card">
+                    <span class="tag">Edge</span>
+                    <h3 class="metallic-text">Zero-Trust Gateway</h3>
+                    <p>Public access stays on the edge. The LAN stays private.</p>
+                </div>
+                <div class="card">
+                    <span class="tag">Core</span>
+                    <h3 class="metallic-text">Compute &amp; Services</h3>
+                    <p>Containers for services and experiments. GPU passthrough for inference.</p>
+                </div>
+                <div class="card">
+                    <span class="tag">Storage</span>
+                    <h3 class="metallic-text">Fast, redundant data</h3>
+                    <p>ZFS on NVMe. 10G direct link to workstation. Cloud backup to B2.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="monitoring">
             <div class="section-label metallic-text">Observability</div>
+            <h2 class="metallic-text">See what you run</h2>
+            <div class="story">
+                <p>Metrics and logs to spot problems early.</p>
+            </div>
+            <div class="cards">
+                <div class="card">
+                    <span class="tag">Metrics</span>
+                    <h3 class="metallic-text">Prometheus + Dashboards</h3>
+                    <p>Health, usage, and capacity trends.</p>
+                </div>
+                <div class="card">
+                    <span class="tag">Logs</span>
+                    <h3 class="metallic-text">Centralized signals</h3>
+                    <p>Faster debugging and fewer blind spots.</p>
+                </div>
+                <div class="card">
+                    <span class="tag">Services</span>
+                    <h3 class="metallic-text">Everyday use</h3>
+                    <p>Jellyfin for media, Immich for photos, Home Assistant for automation.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="projects">
+            <div class="section-label metallic-text">Projects</div>
             <h2 class="metallic-text">Build, measure, iterate</h2>
             <div class="story">
                 <p>I care about systems I can see and improve.</p>
             </div>
             <div class="cards">
                 <div class="card">
-                    <span class="tag">Homelab</span>
-                    <h3 class="metallic-text">Public-safe notes</h3>
-                    <p>Small, private-first stack at home. Dual-port 10GbE: storage lane + uplink lane.</p>
+                    <span class="tag">Self-hosted</span>
+                    <h3 class="metallic-text">adolago.xyz</h3>
+                    <p>This site. Served from svr-dmz (Debian 13) via Caddy reverse proxy and Cloudflare Tunnel. Privacy analytics with Plausible.</p>
                     <div class="mini-status" aria-live="polite">
                         <span class="status-dot" data-edge-status-dot></span>
                         <span class="mini-status-text" data-edge-status-title>Edge: checking…</span>
                         <span class="mini-status-text" data-edge-uptime-text></span>
                     </div>
+                </div>
+                <div class="card">
+                    <span class="tag">Self-hosted</span>
+                    <h3 class="metallic-text">GMATE</h3>
+                    <p>AI-powered GMAT study platform. Adaptive spaced repetition, Socratic AI tutor, question bank with mastery tracking. Next.js, PostgreSQL, local LLM.</p>
                     <div class="card-links">
-                        <a class="card-link" href="homelab.html">Read notes</a>
+                        <a class="card-link" href="https://github.com/adolago/gmate" target="_blank" rel="noreferrer">GitHub</a>
                     </div>
                 </div>
                 <div class="card">
@@ -517,14 +768,6 @@
                     <p>opencode wrapped in openclaw. Semantic memory, tool orchestration, multi-surface support.</p>
                     <div class="card-links">
                         <a class="card-link" href="https://github.com/adolago/zee" target="_blank" rel="noreferrer">GitHub</a>
-                    </div>
-                </div>
-                <div class="card">
-                    <span class="tag">GMATE</span>
-                    <h3 class="metallic-text">GMAT study platform</h3>
-                    <p>AI-powered adaptive tutor with spaced repetition and Socratic pedagogy.</p>
-                    <div class="card-links">
-                        <a class="card-link" href="https://github.com/adolago/gmate" target="_blank" rel="noreferrer">GitHub</a>
                     </div>
                 </div>
                 <div class="card">
@@ -848,5 +1091,6 @@
     <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
     <script src="js/metallic-accent.js"></script>
     <script src="js/homelab-status.js"></script>
+    <script src="js/uptime-graph.js"></script>
 </body>
 </html>
