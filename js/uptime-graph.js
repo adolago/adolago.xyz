@@ -5,10 +5,13 @@
   const avgEl = document.querySelector('[data-uptime-avg]');
   const DAYS = 90;
   const STEP = 86400;
+  const REFRESH_MS = 30000;
   const DEFAULT_QUERY = 'avg_over_time(probe_success[1d])';
   const STATUS_URL = '/api/status.json';
   const FULL_DAY_THRESHOLDS = { up: 1.0, degraded: 0.95 };
   const IN_PROGRESS_THRESHOLDS = { up: 0.95, degraded: 0.75 };
+  let refreshInFlight = false;
+  let refreshTimer = null;
 
   function resolveQuery() {
     const fromAttr = chart.getAttribute('data-uptime-query');
@@ -37,6 +40,14 @@
   function formatPct(v) {
     if (v === null) return 'No data';
     return (v * 100).toFixed(2) + '%';
+  }
+
+  function formatLiveStamp(ts) {
+    return new Date(ts * 1000).toLocaleTimeString(undefined, {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
   }
 
   function buildBars(slots, currentDayTs) {
@@ -125,7 +136,10 @@
     return filled;
   }
 
-  async function init() {
+  async function refresh() {
+    if (refreshInFlight) return;
+    refreshInFlight = true;
+
     const now = Math.floor(Date.now() / 1000);
     const currentDayTs = Math.floor(now / STEP) * STEP;
     const start = currentDayTs - (DAYS - 1) * STEP;
@@ -154,80 +168,98 @@
       fetchStatusUptime(),
     ]);
 
-    const series = promResult.series;
-    const fetchFailed = promResult.fetchFailed;
+    try {
+      const series = promResult.series;
+      const fetchFailed = promResult.fetchFailed;
 
-    // Build a map of timestamp → value using the daily minimum across series.
-    const valueMap = new Map();
-    for (const result of series) {
-      if (!Array.isArray(result?.values)) continue;
+      // Build a map of timestamp → value using the daily minimum across series.
+      const valueMap = new Map();
+      for (const result of series) {
+        if (!Array.isArray(result?.values)) continue;
 
-      for (const point of result.values) {
-        if (!Array.isArray(point) || point.length < 2) continue;
+        for (const point of result.values) {
+          if (!Array.isArray(point) || point.length < 2) continue;
 
-        const ts = Number(point[0]);
-        const val = parseFloat(point[1]);
-        if (!Number.isFinite(ts) || !Number.isFinite(val)) continue;
+          const ts = Number(point[0]);
+          const val = parseFloat(point[1]);
+          if (!Number.isFinite(ts) || !Number.isFinite(val)) continue;
 
-        const dayTs = Math.floor(ts / STEP) * STEP;
-        const prev = valueMap.get(dayTs);
-        if (prev === undefined || val < prev) {
-          valueMap.set(dayTs, val);
+          const dayTs = Math.floor(ts / STEP) * STEP;
+          const prev = valueMap.get(dayTs);
+          if (prev === undefined || val < prev) {
+            valueMap.set(dayTs, val);
+          }
         }
       }
-    }
 
-    // Generate 90 day slots
-    const slots = [];
-    for (let i = 0; i < DAYS; i++) {
-      const dayTs = start + i * STEP;
-      const v = valueMap.get(dayTs);
-      slots.push({ ts: dayTs, value: v !== undefined ? v : null });
-    }
-
-    const backfilledCount = backfillSlotsFromCurrentUptime(slots, statusUptimeSeconds, now);
-
-    buildBars(slots, currentDayTs);
-
-    const { avg, sampledCount } = computeAvg(slots);
-    const sampledCoverage = `(${sampledCount}/${slots.length} days sampled)`;
-    if (avgEl) {
-      avgEl.textContent = avg !== null
-        ? `${formatPct(avg)} avg ${sampledCoverage}`
-        : `No data ${sampledCoverage}`;
-
-      const includesCurrentDay = slots.some((slot) => slot.ts === currentDayTs && slot.value !== null);
-
-      if (fetchFailed && backfilledCount > 0) {
-        avgEl.title = 'Prometheus query failed; recent days estimated from current uptime. No-data days are excluded from the average.';
-      } else if (fetchFailed) {
-        avgEl.title = 'Prometheus query failed; no-data days are excluded from the average.';
-      } else if (valueMap.size === 0 && backfilledCount > 0) {
-        avgEl.title = 'Probe history is still building; recent days estimated from current uptime. No-data days are excluded from the average.';
-      } else if (valueMap.size === 0) {
-        avgEl.title = 'No uptime samples returned yet.';
-      } else if (sampledCount < slots.length) {
-        avgEl.title = 'Average uses sampled days only; no-data days are excluded.';
-      } else {
-        avgEl.removeAttribute('title');
+      // Generate 90 day slots
+      const slots = [];
+      for (let i = 0; i < DAYS; i++) {
+        const dayTs = start + i * STEP;
+        const v = valueMap.get(dayTs);
+        slots.push({ ts: dayTs, value: v !== undefined ? v : null });
       }
 
-      if (includesCurrentDay) {
-        const existingTitle = avgEl.getAttribute('title');
-        const inProgressNote = 'Includes today (in progress). Today uses relaxed thresholds: green >= 95%, orange >= 75%, red < 75%.';
-        if (existingTitle) {
-          avgEl.title = `${existingTitle} ${inProgressNote}`;
+      const backfilledCount = backfillSlotsFromCurrentUptime(slots, statusUptimeSeconds, now);
+
+      chart.textContent = '';
+      buildBars(slots, currentDayTs);
+
+      const { avg, sampledCount } = computeAvg(slots);
+      const sampledCoverage = `(${sampledCount}/${slots.length} days sampled)`;
+      if (avgEl) {
+        const liveStamp = formatLiveStamp(now);
+        avgEl.textContent = avg !== null
+          ? `${formatPct(avg)} avg ${sampledCoverage} · live ${liveStamp}`
+          : `No data ${sampledCoverage} · live ${liveStamp}`;
+
+        const includesCurrentDay = slots.some((slot) => slot.ts === currentDayTs && slot.value !== null);
+
+        if (fetchFailed && backfilledCount > 0) {
+          avgEl.title = 'Prometheus query failed; recent days estimated from current uptime. No-data days are excluded from the average.';
+        } else if (fetchFailed) {
+          avgEl.title = 'Prometheus query failed; no-data days are excluded from the average.';
+        } else if (valueMap.size === 0 && backfilledCount > 0) {
+          avgEl.title = 'Probe history is still building; recent days estimated from current uptime. No-data days are excluded from the average.';
+        } else if (valueMap.size === 0) {
+          avgEl.title = 'No uptime samples returned yet.';
+        } else if (sampledCount < slots.length) {
+          avgEl.title = 'Average uses sampled days only; no-data days are excluded.';
         } else {
-          avgEl.title = inProgressNote;
-        }
-      } else {
-        const existingTitle = avgEl.getAttribute('title');
-        if (existingTitle === 'Includes today (in progress). Today uses relaxed thresholds: green >= 95%, orange >= 75%, red < 75%.') {
           avgEl.removeAttribute('title');
         }
+
+        if (includesCurrentDay) {
+          const existingTitle = avgEl.getAttribute('title');
+          const inProgressNote = 'Includes today (in progress). Today uses relaxed thresholds: green >= 95%, orange >= 75%, red < 75%.';
+          if (existingTitle) {
+            avgEl.title = `${existingTitle} ${inProgressNote}`;
+          } else {
+            avgEl.title = inProgressNote;
+          }
+        } else {
+          const existingTitle = avgEl.getAttribute('title');
+          if (existingTitle === 'Includes today (in progress). Today uses relaxed thresholds: green >= 95%, orange >= 75%, red < 75%.') {
+            avgEl.removeAttribute('title');
+          }
+        }
       }
+    } finally {
+      refreshInFlight = false;
     }
   }
 
-  init();
+  function start() {
+    refresh();
+    refreshTimer = setInterval(() => {
+      if (document.hidden) return;
+      refresh();
+    }, REFRESH_MS);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refresh();
+  });
+
+  start();
 })();
