@@ -9,8 +9,8 @@
   const REFRESH_MS = 30000;
   const DEFAULT_QUERY = 'avg_over_time(probe_success[1d])';
   const STATUS_URL = '/api/status.json';
-  const FULL_DAY_THRESHOLDS = { up: 1.0, degraded: 0.95 };
-  const IN_PROGRESS_THRESHOLDS = { up: 0.95, degraded: 0.75 };
+  // Unified color thresholds for all days (including today) to avoid day-rollover color flips.
+  const UPTIME_THRESHOLDS = { up: 0.95, degraded: 0.75 };
   let refreshInFlight = false;
   let refreshTimer = null;
 
@@ -24,12 +24,11 @@
     return DEFAULT_QUERY;
   }
 
-  function classForValue(v, { inProgress = false } = {}) {
+  function classForValue(v) {
     if (v === null) return 'no-data';
 
-    const thresholds = inProgress ? IN_PROGRESS_THRESHOLDS : FULL_DAY_THRESHOLDS;
-    if (v >= thresholds.up) return 'up';
-    if (v >= thresholds.degraded) return 'degraded';
+    if (v >= UPTIME_THRESHOLDS.up) return 'up';
+    if (v >= UPTIME_THRESHOLDS.degraded) return 'degraded';
     return 'down';
   }
 
@@ -60,7 +59,7 @@
       const dayLabel = isCurrentDay ? 'Today (live)' : formatDate(slots[i].ts);
 
       const bar = document.createElement('div');
-      bar.className = 'bar ' + classForValue(slots[i].value, { inProgress: isCurrentDay });
+      bar.className = 'bar ' + classForValue(slots[i].value);
       bar.setAttribute('aria-label', `${dayLabel}: ${formatPct(slots[i].value)}`);
 
       bar.addEventListener('mouseenter', () => {
@@ -324,17 +323,8 @@
 
         if (includesCurrentDay) {
           const existingTitle = avgEl.getAttribute('title');
-          const inProgressNote = 'Includes today (live). Today uses relaxed thresholds: green >= 95%, orange >= 75%, red < 75%.';
-          if (existingTitle) {
-            avgEl.title = `${existingTitle} ${inProgressNote}`;
-          } else {
-            avgEl.title = inProgressNote;
-          }
-        } else {
-          const existingTitle = avgEl.getAttribute('title');
-          if (existingTitle === 'Includes today (live). Today uses relaxed thresholds: green >= 95%, orange >= 75%, red < 75%.') {
-            avgEl.removeAttribute('title');
-          }
+          const thresholdsNote = 'Color thresholds: green >= 95%, orange >= 75%, red < 75%.';
+          avgEl.title = existingTitle ? `${existingTitle} ${thresholdsNote}` : thresholdsNote;
         }
       }
     } finally {
