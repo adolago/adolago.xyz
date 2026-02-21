@@ -17,7 +17,7 @@
             --bg: #121212;
         }
 
-        /* Metallic navy text - diagonal bands matching knot palette.
+        /* Metallic navy text with diagonal bands.
            135deg so each text line gets its own highlight sweep. */
         .metallic-text {
             background: linear-gradient(
@@ -251,6 +251,18 @@
             line-height: 1.8;
         }
 
+        .story-link {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(72, 132, 212, 0.35);
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .story-link:hover {
+            color: #4884D4;
+            border-color: #4884D4;
+        }
+
         #connect {
             text-align: center;
         }
@@ -266,7 +278,7 @@
         }
         
         .card {
-            background: rgba(14, 31, 59, 0.7);
+            background: rgba(14, 31, 59, 0.88);
             border: 1px solid rgba(25, 60, 114, 0.4);
             border-radius: 16px;
             padding: 2rem;
@@ -274,7 +286,7 @@
         }
 
         .card:hover {
-            background: rgba(25, 60, 114, 0.35);
+            background: rgba(25, 60, 114, 0.62);
             border-color: rgba(72, 132, 212, 0.5);
             transform: translateY(-4px);
             box-shadow: 0 8px 32px rgba(14, 31, 59, 0.25);
@@ -404,21 +416,6 @@
             section { padding: 4rem 1.5rem; }
         }
 
-        /* Metallic Accent Container */
-        #metallic-accent {
-            position: relative;
-            width: 100%;
-            height: 150px;
-            z-index: 1;
-            opacity: 1;
-            pointer-events: auto;
-            overflow: hidden;
-        }
-
-        #metallic-accent canvas {
-            display: block;
-        }
-
         .pill-list {
             display: flex;
             flex-wrap: wrap;
@@ -540,11 +537,37 @@
             color: rgba(255,255,255,0.35);
         }
 
-        @media (max-width: 768px) {
-            #metallic-accent {
-                height: 80px;
-            }
+        .uptime-legend {
+            margin-top: 0.85rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem 1.1rem;
+            align-items: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.64rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.4);
         }
+
+        .uptime-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .uptime-legend-swatch {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            flex: 0 0 auto;
+        }
+
+        .uptime-legend-swatch.up { background: #3DDC97; }
+        .uptime-legend-swatch.degraded { background: #F5A623; }
+        .uptime-legend-swatch.down { background: #FF5C5C; }
+        .uptime-legend-swatch.no-data { background: rgba(255,255,255,0.08); }
+
     </style>
 </head>
 <body>
@@ -554,7 +577,6 @@
         <header>
             <div class="brand">
                 <a href="#home" class="logo metallic-text">Artur Do Lago</a>
-                <div id="metallic-accent"></div>
             </div>
             <nav>
                 <a href="#about">About</a>
@@ -592,6 +614,7 @@
             <div class="story">
                 <p>Brazilian-born, Vienna-based CFA Charterholder. I grew up pulling engines apart with my dad and got hooked on how systems work.</p>
                 <p>I moved from sport into economics and finance, and worked with PwC, Cox Capital, and Neo Investimentos. I'm looking for roles at the intersection of finance and technology.</p>
+                <p>I also dabble in DJing, something I picked up from my love of electronic music. Through countless hours on the bike, running, and walking, music has always been with me. <a class="story-link" href="https://soundcloud.com/fromdlake/lake-radio-002" target="_blank" rel="noreferrer">Lake Radio 002</a>.</p>
             </div>
         </section>
 
@@ -642,11 +665,17 @@
                 <div class="card" style="grid-column: 1 / -1;">
                     <span class="tag">90 days</span>
                     <h3 class="metallic-text">Uptime history</h3>
-                    <div class="uptime-chart" data-uptime-chart aria-label="90-day uptime history"></div>
+                    <div class="uptime-chart" data-uptime-chart data-uptime-query='avg_over_time(probe_success{job="blackbox-http",instance="https://adolago.xyz/"}[1d])' aria-label="90-day uptime history"></div>
                     <div class="uptime-chart-meta">
                         <span>90 days ago</span>
                         <span data-uptime-avg></span>
                         <span>Today</span>
+                    </div>
+                    <div class="uptime-legend" aria-label="Uptime history legend">
+                        <span class="uptime-legend-item"><span class="uptime-legend-swatch up" aria-hidden="true"></span>Up</span>
+                        <span class="uptime-legend-item"><span class="uptime-legend-swatch degraded" aria-hidden="true"></span>Degraded</span>
+                        <span class="uptime-legend-item"><span class="uptime-legend-swatch down" aria-hidden="true"></span>Down</span>
+                        <span class="uptime-legend-item"><span class="uptime-legend-swatch no-data" aria-hidden="true"></span>No data (monitoring not active yet)</span>
                     </div>
                 </div>
             </div>
@@ -768,6 +797,7 @@
                     <h3 class="metallic-text">CLI agent engine</h3>
                     <p>opencode wrapped in openclaw. Semantic memory, tool orchestration, multi-surface support. Alpha.</p>
                     <div class="card-links">
+                        <a class="card-link" href="https://zee-bot.com" target="_blank" rel="noreferrer">Website</a>
                         <a class="card-link" href="https://github.com/adolago/zee" target="_blank" rel="noreferrer">GitHub</a>
                     </div>
                 </div>
@@ -776,6 +806,7 @@
                     <h3 class="metallic-text">Config management</h3>
                     <p>Fast infra automation. Alpha.</p>
                     <div class="card-links">
+                        <a class="card-link" href="https://rustible.com" target="_blank" rel="noreferrer">Website</a>
                         <a class="card-link" href="https://github.com/rustible/rustible" target="_blank" rel="noreferrer">GitHub</a>
                     </div>
                 </div>
@@ -1088,10 +1119,7 @@
     render();
     </script>
     
-    <!-- Three.js for Metallic Accent -->
-    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-    <script src="js/metallic-accent.js"></script>
     <script src="js/homelab-status.js"></script>
-    <script src="js/uptime-graph.js"></script>
+    <script src="js/uptime-graph.js?v=20260220-uptime-fix75"></script>
 </body>
 </html>
