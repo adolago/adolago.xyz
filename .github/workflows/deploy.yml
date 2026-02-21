@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
-      SSH_HOSTNAME: ${{ vars.SSH_HOSTNAME }}
+      SSH_HOSTNAME: ${{ vars.SSH_HOSTNAME || 'ssh.adolago.xyz' }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER || 'deploy' }}
       CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
       CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
@@ -89,22 +89,13 @@ jobs:
             exit 1
           fi
 
-          echo "Uploading site payload..."
+          echo "Uploading and deploying site payload..."
           tar -czf - \
             --exclude '.git' \
             --exclude '.github' \
             --exclude '.gitignore' \
             --exclude '*.example' \
-            . | ssh dmz-gateway 'sudo tar xzf - -C /var/www/html --strip-components=0'
-
-          echo "Setting permissions..."
-          ssh dmz-gateway 'sudo chown -R caddy:caddy /var/www/html'
-
-          echo "Refreshing status endpoint..."
-          ssh dmz-gateway 'if [ -x /usr/local/bin/adolago-site-status-update ]; then sudo /usr/local/bin/adolago-site-status-update || true; fi'
-
-          echo "Reloading Caddy..."
-          ssh dmz-gateway 'sudo systemctl reload caddy'
+            . | ssh dmz-gateway 'sudo /usr/local/sbin/dmz-site-deploy adolago.xyz'
 
           step_ok=1
 
