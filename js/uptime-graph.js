@@ -5,6 +5,7 @@
   const avgEl = document.querySelector('[data-uptime-avg]');
   const DAYS = 90;
   const STEP = 86400;
+  const LIVE_STEP = 300;
   const REFRESH_MS = 30000;
   const DEFAULT_QUERY = 'avg_over_time(probe_success[1d])';
   const STATUS_URL = '/api/status.json';
@@ -56,7 +57,7 @@
 
     for (let i = 0; i < slots.length; i++) {
       const isCurrentDay = slots[i].ts === currentDayTs;
-      const dayLabel = isCurrentDay ? 'Today (in progress)' : formatDate(slots[i].ts);
+      const dayLabel = isCurrentDay ? 'Today (live)' : formatDate(slots[i].ts);
 
       const bar = document.createElement('div');
       bar.className = 'bar ' + classForValue(slots[i].value, { inProgress: isCurrentDay });
@@ -112,9 +113,57 @@
     }
   }
 
+  function resolveLiveTodayQuery(query) {
+    const match = query.match(/^\s*avg_over_time\((.+)\[1d\]\)\s*$/);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+    return query;
+  }
+
+  function computeLiveTodayRatioFromSeries(series, currentDayTs, nowTs) {
+    const pointMinMap = new Map();
+
+    for (const result of series) {
+      if (!Array.isArray(result?.values)) continue;
+
+      for (const point of result.values) {
+        if (!Array.isArray(point) || point.length < 2) continue;
+
+        const ts = Number(point[0]);
+        const val = parseFloat(point[1]);
+        if (!Number.isFinite(ts) || !Number.isFinite(val)) continue;
+        if (ts < currentDayTs || ts > nowTs) continue;
+
+        const prev = pointMinMap.get(ts);
+        if (prev === undefined || val < prev) {
+          pointMinMap.set(ts, Math.max(0, Math.min(1, val)));
+        }
+      }
+    }
+
+    if (pointMinMap.size === 0) return null;
+    const values = Array.from(pointMinMap.values());
+    const sum = values.reduce((acc, v) => acc + v, 0);
+    return sum / values.length;
+  }
+
+  function computeTodayRatioFromStatus(uptimeSeconds, currentDayTs, nowTs) {
+    if (!Number.isFinite(uptimeSeconds) || uptimeSeconds <= 0) return null;
+
+    const uptimeStart = nowTs - uptimeSeconds;
+    const overlapStart = Math.max(currentDayTs, uptimeStart);
+    const overlap = nowTs - overlapStart;
+    if (overlap <= 0) return null;
+
+    const elapsedToday = Math.max(1, nowTs - currentDayTs);
+    return Math.max(0, Math.min(1, overlap / elapsedToday));
+  }
+
   function backfillSlotsFromCurrentUptime(slots, uptimeSeconds, nowTs) {
     if (!Number.isFinite(uptimeSeconds) || uptimeSeconds <= 0) return 0;
 
+    const currentDayTs = Math.floor(nowTs / STEP) * STEP;
     const uptimeStart = nowTs - uptimeSeconds;
     let filled = 0;
 
@@ -129,7 +178,10 @@
 
       if (overlap <= 0) continue;
 
-      slot.value = Math.max(0, Math.min(1, overlap / STEP));
+      const denominator = dayStart === currentDayTs
+        ? Math.max(1, nowTs - currentDayTs)
+        : STEP;
+      slot.value = Math.max(0, Math.min(1, overlap / denominator));
       filled += 1;
     }
 
@@ -144,6 +196,7 @@
     const currentDayTs = Math.floor(now / STEP) * STEP;
     const start = currentDayTs - (DAYS - 1) * STEP;
     const query = resolveQuery();
+    const liveTodayQuery = resolveLiveTodayQuery(query);
 
     const url = '/api/prometheus/query_range'
       + '?query=' + encodeURIComponent(query)
@@ -151,7 +204,13 @@
       + '&end=' + now
       + '&step=' + STEP;
 
-    const [promResult, statusUptimeSeconds] = await Promise.all([
+    const liveTodayUrl = '/api/prometheus/query_range'
+      + '?query=' + encodeURIComponent(liveTodayQuery)
+      + '&start=' + currentDayTs
+      + '&end=' + now
+      + '&step=' + LIVE_STEP;
+
+    const [promResult, statusUptimeSeconds, liveTodayResult] = await Promise.all([
       (async () => {
         try {
           const res = await fetch(url);
@@ -166,6 +225,19 @@
         }
       })(),
       fetchStatusUptime(),
+      (async () => {
+        try {
+          const res = await fetch(liveTodayUrl);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          if (json.status === 'success' && json.data?.result?.length > 0) {
+            return { series: json.data.result, fetchFailed: false };
+          }
+          return { series: [], fetchFailed: false };
+        } catch {
+          return { series: [], fetchFailed: true };
+        }
+      })(),
     ]);
 
     try {
@@ -202,6 +274,17 @@
 
       const backfilledCount = backfillSlotsFromCurrentUptime(slots, statusUptimeSeconds, now);
 
+      const todaySlot = slots.find((slot) => slot.ts === currentDayTs);
+      const liveTodayRatio = computeLiveTodayRatioFromSeries(liveTodayResult.series, currentDayTs, now);
+      const statusTodayRatio = computeTodayRatioFromStatus(statusUptimeSeconds, currentDayTs, now);
+      if (todaySlot) {
+        if (liveTodayRatio !== null) {
+          todaySlot.value = liveTodayRatio;
+        } else if (statusTodayRatio !== null) {
+          todaySlot.value = statusTodayRatio;
+        }
+      }
+
       chart.textContent = '';
       buildBars(slots, currentDayTs);
 
@@ -229,9 +312,19 @@
           avgEl.removeAttribute('title');
         }
 
+        if (liveTodayRatio !== null) {
+          const existingTitle = avgEl.getAttribute('title');
+          const liveNote = 'Today uses live probe samples from midnight to now.';
+          avgEl.title = existingTitle ? `${existingTitle} ${liveNote}` : liveNote;
+        } else if (statusTodayRatio !== null) {
+          const existingTitle = avgEl.getAttribute('title');
+          const fallbackNote = 'Today is estimated from status uptime because live probe samples were unavailable.';
+          avgEl.title = existingTitle ? `${existingTitle} ${fallbackNote}` : fallbackNote;
+        }
+
         if (includesCurrentDay) {
           const existingTitle = avgEl.getAttribute('title');
-          const inProgressNote = 'Includes today (in progress). Today uses relaxed thresholds: green >= 95%, orange >= 75%, red < 75%.';
+          const inProgressNote = 'Includes today (live). Today uses relaxed thresholds: green >= 95%, orange >= 75%, red < 75%.';
           if (existingTitle) {
             avgEl.title = `${existingTitle} ${inProgressNote}`;
           } else {
@@ -239,7 +332,7 @@
           }
         } else {
           const existingTitle = avgEl.getAttribute('title');
-          if (existingTitle === 'Includes today (in progress). Today uses relaxed thresholds: green >= 95%, orange >= 75%, red < 75%.') {
+          if (existingTitle === 'Includes today (live). Today uses relaxed thresholds: green >= 95%, orange >= 75%, red < 75%.') {
             avgEl.removeAttribute('title');
           }
         }
