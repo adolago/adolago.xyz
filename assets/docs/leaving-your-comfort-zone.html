@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaving the Comfort Zone</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #e8eef5;
+            --secondary: rgba(255,255,255,0.7);
+            --muted: rgba(255,255,255,0.5);
+            --accent: #4884D4;
+            --bg: #121212;
+            --card: rgba(11, 17, 25, 0.7);
+            --border: rgba(72, 132, 212, 0.24);
+        }
+
+        .metallic-text {
+            background: linear-gradient(
+                135deg,
+                #193C72 0%,
+                #4884D4 15%,
+                #193C72 30%,
+                #2a5a90 45%,
+                #4884D4 55%,
+                #193C72 70%,
+                #3068A8 85%,
+                #4884D4 100%
+            );
+            background-size: 100% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(1300px 700px at 10% -10%, rgba(72,132,212,0.15), transparent 55%),
+                radial-gradient(900px 500px at 95% 0%, rgba(25,60,114,0.22), transparent 60%),
+                var(--bg);
+            color: var(--primary);
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1.75;
+        }
+
+        h1, h2, .logo, .eyebrow, .back-link {
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.2rem 2rem;
+            background: linear-gradient(to bottom, rgba(18,18,18,0.94), rgba(18,18,18,0.35));
+            backdrop-filter: blur(6px);
+            border-bottom: 1px solid rgba(72, 132, 212, 0.16);
+        }
+
+        .logo {
+            text-decoration: none;
+            font-size: 1.4rem;
+        }
+
+        .back-link {
+            color: var(--secondary);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.25s ease;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+        }
+
+        main {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 3.25rem 2rem 4.5rem;
+        }
+
+        .article-shell {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 2.2rem clamp(1.2rem, 2vw + 1rem, 2.8rem);
+            box-shadow: 0 25px 90px rgba(0, 0, 0, 0.35);
+        }
+
+        .eyebrow {
+            color: var(--muted);
+            font-size: 0.95rem;
+            margin-bottom: 0.65rem;
+        }
+
+        h1 {
+            font-size: clamp(2.1rem, 5.5vw, 3.5rem);
+            line-height: 1.05;
+            margin-bottom: 1rem;
+        }
+
+        .intro {
+            color: var(--secondary);
+            font-size: 1.05rem;
+            margin-bottom: 2rem;
+            max-width: 72ch;
+        }
+
+        section + section {
+            margin-top: 2.2rem;
+        }
+
+        h2 {
+            font-size: clamp(1.45rem, 2.8vw, 2rem);
+            margin-bottom: 0.6rem;
+        }
+
+        p {
+            color: var(--secondary);
+            margin-top: 0.75rem;
+        }
+
+        blockquote {
+            margin-top: 1rem;
+            padding: 0.85rem 1rem;
+            border-left: 2px solid rgba(72, 132, 212, 0.6);
+            color: rgba(255,255,255,0.8);
+            background: rgba(72, 132, 212, 0.08);
+        }
+
+        .closing {
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+        }
+
+        footer {
+            border-top: 1px solid rgba(72, 132, 212, 0.2);
+            padding: 2.6rem 1.5rem 3rem;
+            text-align: center;
+            color: rgba(255,255,255,0.35);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem 1.25rem;
+            }
+
+            main {
+                padding: 2rem 1rem 3rem;
+            }
+
+            .article-shell {
+                padding: 1.35rem 1.1rem;
+                border-radius: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a class="logo metallic-text" href="../../index.html">Artur Do Lago</a>
+        <a class="back-link" href="../../index.html#philosophy">Back to Philosophy</a>
+    </header>
+
+    <main>
+        <article class="article-shell">
+            <p class="eyebrow">Talk | 2016</p>
+            <h1 class="metallic-text">Leaving the Comfort Zone</h1>
+            <p class="intro">
+                Good evening, my name is Artur Do Lago, I am 21 years old, and currently, I work for a professional services company. This talk was given in 2016.
+            </p>
+
+            <section>
+                <h2 class="metallic-text">Background</h2>
+                <p>
+                    From 2014 to 2015, I was a member of Acao Junior, a student-led consulting firm at UFSC's Socioeconomic Center in Florianopolis. But before that, until 2013, I was a triathlete for nine years. Starting very young, I competed extensively and earned several achievements, driven by the dream of becoming an Olympic athlete.
+                </p>
+                <p>
+                    Like most dedicated athletes, my life revolved around intense discipline and considerable sacrifices. Training sessions occurred twice, sometimes three times a day, including weekends. This challenging routine was painful but incredibly instructive, offering numerous valuable lessons.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="metallic-text">First Failure, Second Attempt</h2>
+                <p>
+                    When I eventually decided to pursue a more traditional professional path by becoming a trainee at Acao Junior, I assumed that the performance principles I had learned in sports would seamlessly translate into professional success. I expected approval to come naturally.
+                </p>
+                <p>
+                    Indeed, discipline and other aspects did contribute positively. However, my athlete's mindset, geared towards individual performance, did not align fully with the collaborative dynamics of a team environment. Despite my intense dedication, performing highly as an individual was not enough, and I was not approved.
+                </p>
+                <p>
+                    This rejection was shocking, not only to me but also to those around me who expected my success. My confident demeanor had implied success from the outset. Nevertheless, the group moved forward without me.
+                </p>
+                <p>
+                    In the following semester, watching former trainee colleagues actively involved in the selection process, I applied once more, passed the interviews, and faced the trainee period again. Initially, I had mistakenly believed my comfort zone was confined to my bed, due to the years of exhaustion from rigorous training. Yet, experiencing the trainee phase again, especially in front of everyone who had witnessed my previous confidence and subsequent failure, became the most uncomfortable scenario of my life, even more challenging than speaking to you now.
+                </p>
+                <p>
+                    At times, I questioned if it was worthwhile. Today, however, I wish to share the rationale behind embracing opportunities that lie beyond our comfort zones.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="metallic-text">What Is the Water?</h2>
+                <p>
+                    Reflecting on my experiences, I recall a story by David Foster Wallace about two young fish who encounter an older fish who greets them, saying, "Morning, boys, how's the water?" After swimming on, one fish asks the other, puzzled, "What the hell is water?"
+                </p>
+                <p>
+                    This story emphasizes that often, the most crucial truths are the hardest to perceive and discuss. It is common to see ourselves as the center of the universe, given our central role in our own experiences.
+                </p>
+                <p>
+                    This does not mean compassion alone is the key to leaving the comfort zone. Instead, it is an invitation to diversify perspectives and understand what our comfort zone actually is.
+                </p>
+                <p>
+                    The concept of moving toward discomfort often intimidates people. So I prefer to call it the zone of confrontation.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="metallic-text">Epicurus and Zeno</h2>
+                <p>
+                    This brings us to an old debate between Epicurus and Zeno of Citium. Epicureanism seeks tranquility and freedom from fear, aiming for a passive, comfortable existence. Stoicism, by contrast, argues that we should manage fear rather than avoid it, because uncomfortable situations are inevitable.
+                </p>
+                <blockquote>
+                    A Stoic transforms fear into prudence, pain into transformation, errors into initiation, and desires into action.
+                </blockquote>
+                <p>
+                    For anyone trying to leave the comfort zone, Stoicism offers a practical model.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="metallic-text">Fear, Pain, Error, Action</h2>
+                <p>
+                    The first step is replacing fear with prudence. Fear becomes harmful when it paralyzes action and turns into missed opportunity. Prudence focuses on what we control.
+                </p>
+                <p>
+                    Pain is not always negative. In sports, pain often tracks effort and growth. Stress can be similar. A University of Wisconsin-Madison study showed worse health outcomes among people who saw stress as highly harmful compared with those who interpreted it constructively.
+                </p>
+                <p>
+                    Mistakes should be reframed as information. Failures become initiation points for wiser action. And desire without action changes nothing. Since outcomes are uncertain, what we can do is act now.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="metallic-text">Antifragility and Freedom</h2>
+                <p>
+                    Why accept discomfort and possible failure? Comfort-zone thinking imagines all worst cases at once. Reality rarely unfolds that way.
+                </p>
+                <blockquote>
+                    A little agitation energizes souls, and what truly prospers a species is less peace than freedom.
+                </blockquote>
+                <p>
+                    Using this lens, antifragility means more than resilience: it means improving through stressors. The zone of confrontation is where asymmetric returns appear, low downside, high upside, including learning value even when outcomes are imperfect.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="metallic-text">Closing</h2>
+                <p>
+                    To sustain motivation, keep sight of long-term gains. Broad approval usually signals conformity, not exceptional progress. When discomfort triggers misunderstanding or rejection, reinforce your purpose and move forward.
+                </p>
+                <p>
+                    My own transitions, from aspiring Olympic athlete to Economics student and then to Acao Junior, were often met with skepticism, yet they proved rewarding.
+                </p>
+                <p>
+                    I invite you to imagine where you would be if you had never confronted discomfort. Most likely, not better than where you are now.
+                </p>
+                <p>
+                    For my part, without turning fears into prudence, pain into transformation, errors into initiation, and desires into action, I would not have joined Acao Junior, secured my current position, nor shared these insights with you today.
+                </p>
+                <p class="closing">Thank you.</p>
+            </section>
+        </article>
+    </main>
+
+    <footer>
+        <p>Talk given in 2016.</p>
+    </footer>
+</body>
+</html>
