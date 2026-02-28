@@ -10,6 +10,8 @@ on:
 #   SITE_DOMAIN: your-domain.com
 #   SSH_HOSTNAME: ssh.your-domain.com
 #   DEPLOY_USER: deploy
+#   SITE_NAME: site identifier for dmz-site-deploy (default: adolago.xyz)
+#   SITE_ROOT: fallback document root if dmz-site-deploy is missing (default: /var/www/adolago)
 
 jobs:
   deploy:
@@ -18,6 +20,8 @@ jobs:
       SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
       SSH_HOSTNAME: ${{ vars.SSH_HOSTNAME || 'ssh.adolago.xyz' }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER || 'deploy' }}
+      SITE_NAME: ${{ vars.SITE_NAME || 'adolago.xyz' }}
+      SITE_ROOT: ${{ vars.SITE_ROOT || '/var/www/adolago' }}
       CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
       CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
     steps:
@@ -51,9 +55,13 @@ jobs:
           # Start Cloudflare Access TCP tunnel (logs to file so we can print on failure)
           step_ok=0
           CF_PID=""
+          ARCHIVE=""
           cleanup() {
             if [ -n "${CF_PID}" ]; then
               kill "${CF_PID}" 2>/dev/null || true
+            fi
+            if [ -n "${ARCHIVE}" ]; then
+              rm -f "${ARCHIVE}" 2>/dev/null || true
             fi
             if [ "${step_ok}" -eq 0 ]; then
               echo "---- cloudflared log (last 200 lines) ----"
@@ -90,12 +98,40 @@ jobs:
           fi
 
           echo "Uploading and deploying site payload..."
-          tar -czf - \
+          ARCHIVE="$(mktemp /tmp/site-payload.XXXXXX.tgz)"
+          tar -czf "$ARCHIVE" \
             --exclude '.git' \
             --exclude '.github' \
             --exclude '.gitignore' \
             --exclude '*.example' \
-            . | ssh dmz-gateway 'sudo /usr/local/sbin/dmz-site-deploy adolago.xyz'
+            .
+          scp -o ConnectTimeout=20 "$ARCHIVE" dmz-gateway:/tmp/site-payload.tgz
+          ssh dmz-gateway env SITE_NAME="$SITE_NAME" SITE_ROOT="$SITE_ROOT" 'bash -seuo pipefail -s' <<'REMOTE'
+          payload=/tmp/site-payload.tgz
+          tmp_dir=""
+          cleanup_remote() {
+            rm -f "$payload" 2>/dev/null || true
+            if [ -n "$tmp_dir" ]; then
+              sudo rm -rf "$tmp_dir" 2>/dev/null || true
+            fi
+          }
+          trap cleanup_remote EXIT
+
+          if sudo test -x /usr/local/sbin/dmz-site-deploy; then
+            sudo /usr/local/sbin/dmz-site-deploy "$SITE_NAME" < "$payload"
+            exit 0
+          fi
+
+          tmp_dir="$(mktemp -d)"
+          tar -xzf "$payload" -C "$tmp_dir"
+          sudo mkdir -p "$SITE_ROOT"
+          sudo rsync -a --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.gitignore' \
+            --exclude '*.example' \
+            "$tmp_dir/" "$SITE_ROOT/"
+          REMOTE
 
           step_ok=1
 

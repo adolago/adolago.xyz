@@ -10,12 +10,14 @@ Static personal website template. Single-page HTML site with embedded CSS, no bu
 
 Automated via GitHub Actions on push to `main`. The workflow (`.github/workflows/deploy.yml`):
 1. Establishes SSH tunnel through Cloudflare Access
-2. Uploads site files via tar stream to `/var/www/html`
-3. Reloads Caddy web server
-4. Health checks the configured domain
+2. Uploads site payload archive to the origin host
+3. Uses `/usr/local/sbin/dmz-site-deploy` when present
+4. Falls back to direct sync into `SITE_ROOT` (default `/var/www/adolago`)
+5. Health checks the configured domain
 
 Required secrets: `DMZ_GATEWAY_SSH_KEY`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`
 Required variables: `SITE_DOMAIN`, `SSH_HOSTNAME`, `DEPLOY_USER`
+Optional variables: `SITE_NAME`, `SITE_ROOT`
 
 ## Local Development
 

@@ -23,9 +23,10 @@ Minimal static site with Cloudflare Tunnel deployment. Terminal aesthetic, dark 
 
 1. Checkout repository
 2. Load deploy SSH key via Cloudflare Access tunnel
-3. Upload site files to server via tar stream
-4. Restart Caddy web server
-5. Health-check the site
+3. Upload site payload to the origin host
+4. Deploy via `/usr/local/sbin/dmz-site-deploy` when present
+5. Fall back to `rsync --delete` into `SITE_ROOT` when helper is missing
+6. Health-check the site
 
 ### Required GitHub Configuration
 
@@ -36,6 +37,8 @@ Minimal static site with Cloudflare Tunnel deployment. Terminal aesthetic, dark 
 | `SITE_DOMAIN` | Your domain (e.g., `example.com`) |
 | `SSH_HOSTNAME` | Cloudflare tunnel SSH hostname (e.g., `ssh.example.com`) |
 | `DEPLOY_USER` | SSH user on server (default: `deploy`) |
+| `SITE_NAME` | Site identifier passed to `dmz-site-deploy` (default: `adolago.xyz`) |
+| `SITE_ROOT` | Fallback document root for direct sync (default: `/var/www/adolago`) |
 
 **Secrets** (Settings > Secrets and variables > Actions > Secrets):
 
@@ -48,9 +51,9 @@ Minimal static site with Cloudflare Tunnel deployment. Terminal aesthetic, dark 
 ### Server Setup
 
 Your server needs:
-- Caddy (or nginx) serving static files
 - Cloudflare Tunnel configured
-- Deploy user with SSH access and sudo for Caddy restart
+- Deploy user with SSH access
+- Either `/usr/local/sbin/dmz-site-deploy`, or write access (via sudo) to `SITE_ROOT` plus `tar` and `rsync`
 
 ## Manual Deploy
 
@@ -62,10 +65,10 @@ PID=$!
 
 # Sync files
 rsync -avz --delete --exclude '.git/' --exclude '.github/' --exclude '.gitignore' \
-  . deploy@localhost:/srv/www/site/ -e 'ssh -p 2222'
+  . deploy@localhost:/var/www/adolago/ -e 'ssh -p 2222'
 
-# Reload server
-ssh -p 2222 deploy@localhost sudo systemctl restart caddy
+# Optional: run site-specific post-deploy hook if available
+ssh -p 2222 deploy@localhost 'sudo /usr/local/sbin/dmz-site-deploy adolago.xyz || true'
 kill $PID
 ```
 
