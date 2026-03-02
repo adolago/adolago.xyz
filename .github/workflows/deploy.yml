@@ -112,20 +112,22 @@ jobs:
           cleanup_remote() {
             rm -f "$payload" 2>/dev/null || true
             if [ -n "$tmp_dir" ]; then
-              sudo rm -rf "$tmp_dir" 2>/dev/null || true
+              sudo -n rm -rf "$tmp_dir" 2>/dev/null || true
             fi
           }
           trap cleanup_remote EXIT
 
-          if sudo test -x /usr/local/sbin/dmz-site-deploy; then
-            sudo /usr/local/sbin/dmz-site-deploy "$SITE_NAME" < "$payload"
+          # Use wrapper directly when present. Avoid `sudo test` because
+          # deploy users are often allowlisted for the wrapper only.
+          if [ -e /usr/local/sbin/dmz-site-deploy ]; then
+            sudo -n /usr/local/sbin/dmz-site-deploy "$SITE_NAME" < "$payload"
             exit 0
           fi
 
           tmp_dir="$(mktemp -d)"
           tar -xzf "$payload" -C "$tmp_dir"
-          sudo mkdir -p "$SITE_ROOT"
-          sudo rsync -a --delete \
+          sudo -n mkdir -p "$SITE_ROOT"
+          sudo -n rsync -a --delete \
             --exclude '.git/' \
             --exclude '.github/' \
             --exclude '.gitignore' \
