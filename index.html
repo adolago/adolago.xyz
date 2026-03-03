@@ -579,7 +579,6 @@
             <nav>
                 <a href="#about">About</a>
                 <a href="#philosophy">Philosophy</a>
-                <a href="#homelab">Homelab</a>
                 <a href="#projects">Projects</a>
                 <a href="#connect">Connect</a>
             </nav>
@@ -631,136 +630,6 @@
                         <a class="card-link" href="assets/docs/leaving-your-comfort-zone.html" target="_blank" rel="noreferrer">Comfort Zone Talk (2016)</a>
                         <a class="card-link" href="assets/docs/be-aware-of-the-parrot-machine.html" target="_blank" rel="noreferrer">Parrot Machine (Web)</a>
                     </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="homelab">
-            <div class="section-label metallic-text">Homelab</div>
-            <h2 class="metallic-text">Small stack, big lessons</h2>
-            <div class="story">
-                <p>A private-first stack I run at home. A place to learn, keep things stable, and build a few useful services.</p>
-            </div>
-
-            <div class="cards">
-                <div class="card" aria-live="polite">
-                    <span class="tag">Status</span>
-                    <div class="status-row">
-                        <span class="status-dot" id="edge-status-dot" data-edge-status-dot></span>
-                        <div>
-                            <div class="status-title metallic-text" id="edge-status-title" data-edge-status-title>Checking…</div>
-                            <div class="status-subtitle" id="edge-status-subtitle" data-edge-status-subtitle>Fetching /api/status.json</div>
-                        </div>
-                    </div>
-                    <div class="uptime-meter" aria-hidden="true">
-                        <div class="uptime-meter-fill" id="edge-uptime-fill" data-edge-uptime-fill></div>
-                    </div>
-                    <div class="uptime-meta">
-                        <span id="edge-uptime-text" data-edge-uptime-text>Uptime: --</span>
-                        <span id="edge-updated-at" data-edge-updated-at>Updated: --</span>
-                    </div>
-                </div>
-                <div class="card" style="grid-column: 1 / -1;">
-                    <span class="tag">90 days</span>
-                    <h3 class="metallic-text">Uptime history</h3>
-                    <div class="uptime-chart" data-uptime-chart data-uptime-query='avg_over_time(probe_success{job="blackbox-http",instance="https://adolago.xyz/"}[1d])' aria-label="90-day uptime history"></div>
-                    <div class="uptime-chart-meta">
-                        <span>90 days ago</span>
-                        <span data-uptime-avg></span>
-                        <span>Today</span>
-                    </div>
-                    <div class="uptime-legend" aria-label="Uptime history legend">
-                        <span class="uptime-legend-item"><span class="uptime-legend-swatch up" aria-hidden="true"></span>Up</span>
-                        <span class="uptime-legend-item"><span class="uptime-legend-swatch degraded" aria-hidden="true"></span>Degraded</span>
-                        <span class="uptime-legend-item"><span class="uptime-legend-swatch down" aria-hidden="true"></span>Down</span>
-                        <span class="uptime-legend-item"><span class="uptime-legend-swatch no-data" aria-hidden="true"></span>No data (monitoring not active yet)</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="network">
-            <div class="section-label metallic-text">Network</div>
-            <h2 class="metallic-text">Dual-port 10G upgrade</h2>
-            <div class="story">
-                <p>Intel X550-T2 dual-port 10GBase-T NIC split into two dedicated lanes: storage and uplink.</p>
-            </div>
-            <div class="cards">
-                <div class="card">
-                    <span class="tag">Storage lane</span>
-                    <h3 class="metallic-text">10GbE point-to-point</h3>
-                    <p>Dedicated NAS ↔ workstation link on its own /30 subnet. Measured at ~9.3 Gbit/s with iperf3.</p>
-                </div>
-                <div class="card">
-                    <span class="tag">Uplink lane</span>
-                    <h3 class="metallic-text">Core services uplink</h3>
-                    <p>Second port bridged to the core VM so containers and updates don't fight the management interface.</p>
-                </div>
-                <div class="card">
-                    <span class="tag">Stability</span>
-                    <h3 class="metallic-text">No more renumbering</h3>
-                    <p>Interface names pinned by MAC on the host so adding PCIe cards doesn't shuffle NIC names.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="infrastructure">
-            <div class="section-label metallic-text">Infrastructure</div>
-            <h2 class="metallic-text">Build small, document everything</h2>
-            <div class="story">
-                <p>Keep the edge small, prefer boring tools, and write things down.</p>
-                <div class="pill-list">
-                    <span class="pill">Proxmox</span>
-                    <span class="pill">Docker</span>
-                    <span class="pill">Caddy</span>
-                    <span class="pill">Cloudflare Tunnel</span>
-                    <span class="pill">ZFS</span>
-                    <span class="pill">TrueNAS</span>
-                    <span class="pill">Prometheus</span>
-                    <span class="pill">Grafana</span>
-                    <span class="pill">Loki</span>
-                </div>
-            </div>
-            <div class="cards">
-                <div class="card">
-                    <span class="tag">Edge</span>
-                    <h3 class="metallic-text">Zero-Trust Gateway</h3>
-                    <p>Public access stays on the edge. The LAN stays private.</p>
-                </div>
-                <div class="card">
-                    <span class="tag">Core</span>
-                    <h3 class="metallic-text">Compute &amp; Services</h3>
-                    <p>Containers for services and experiments. GPU passthrough for inference.</p>
-                </div>
-                <div class="card">
-                    <span class="tag">Storage</span>
-                    <h3 class="metallic-text">Fast, redundant data</h3>
-                    <p>ZFS on NVMe. 10G direct link to workstation. Cloud backup to B2.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="monitoring">
-            <div class="section-label metallic-text">Observability</div>
-            <h2 class="metallic-text">See what you run</h2>
-            <div class="story">
-                <p>Metrics and logs to spot problems early.</p>
-            </div>
-            <div class="cards">
-                <div class="card">
-                    <span class="tag">Metrics</span>
-                    <h3 class="metallic-text">Prometheus + Dashboards</h3>
-                    <p>Health, usage, and capacity trends.</p>
-                </div>
-                <div class="card">
-                    <span class="tag">Logs</span>
-                    <h3 class="metallic-text">Centralized signals</h3>
-                    <p>Faster debugging and fewer blind spots.</p>
-                </div>
-                <div class="card">
-                    <span class="tag">Services</span>
-                    <h3 class="metallic-text">Everyday use</h3>
-                    <p>Jellyfin for media, Immich for photos, Home Assistant for automation.</p>
                 </div>
             </div>
         </section>
@@ -1111,7 +980,5 @@
     render();
     </script>
     
-    <script src="js/homelab-status.js"></script>
-    <script src="js/uptime-graph.js?v=20260222-uptime-live3"></script>
 </body>
 </html>
