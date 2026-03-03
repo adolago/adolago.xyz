@@ -342,42 +342,7 @@
             display: block;
         }
 
-        .mini-status {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-            margin-top: 1.25rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.45);
-        }
 
-        .mini-status-text {
-            color: rgba(255,255,255,0.45);
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.35);
-            box-shadow: 0 0 0 3px rgba(25, 60, 114, 0.2);
-            flex: 0 0 auto;
-        }
-
-        .status-dot.online {
-            background: #3DDC97;
-            box-shadow: 0 0 0 3px rgba(61, 220, 151, 0.14);
-        }
-
-        .status-dot.offline {
-            background: #FF5C5C;
-            box-shadow: 0 0 0 3px rgba(255, 92, 92, 0.14);
-        }
-        
         footer {
             border-top: 1px solid rgba(25, 60, 114, 0.2);
             padding: 4rem 2rem;
@@ -432,139 +397,6 @@
             border-radius: 999px;
         }
 
-        .status-row {
-            display: flex;
-            align-items: center;
-            gap: 0.9rem;
-            margin: 0.25rem 0 1.25rem;
-        }
-
-        .status-title {
-            font-size: 1.15rem;
-            font-weight: 500;
-            margin-bottom: 0.25rem;
-        }
-
-        .status-subtitle {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.35);
-        }
-
-        .uptime-meter {
-            height: 12px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(38, 104, 168, 0.2);
-            overflow: hidden;
-            margin-top: 0.75rem;
-        }
-
-        .uptime-meter-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(
-                90deg,
-                rgba(38, 104, 168, 0.4),
-                rgba(140, 203, 255, 0.72)
-            );
-            transition: width 0.6s ease;
-        }
-
-        .uptime-meta {
-            display: flex;
-            justify-content: space-between;
-            gap: 1rem;
-            margin-top: 0.75rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.45);
-        }
-
-        .uptime-chart {
-            display: flex;
-            gap: 2px;
-            align-items: flex-end;
-            height: 34px;
-            margin: 1rem 0;
-            position: relative;
-        }
-
-        .uptime-chart .bar {
-            flex: 1;
-            min-width: 0;
-            border-radius: 2px;
-            height: 100%;
-            transition: opacity 0.2s;
-            cursor: default;
-        }
-
-        .uptime-chart .bar.up { background: #3DDC97; }
-        .uptime-chart .bar.degraded { background: #F5A623; }
-        .uptime-chart .bar.down { background: #FF5C5C; }
-        .uptime-chart .bar.no-data { background: rgba(255,255,255,0.08); }
-        .uptime-chart .bar:hover { opacity: 0.7; }
-
-        .uptime-tooltip {
-            position: absolute;
-            top: -2.2rem;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.85);
-            color: var(--primary);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            letter-spacing: 0.04em;
-            padding: 0.3rem 0.6rem;
-            border-radius: 6px;
-            white-space: nowrap;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .uptime-chart-meta {
-            display: flex;
-            justify-content: space-between;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.35);
-        }
-
-        .uptime-legend {
-            margin-top: 0.85rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.65rem 1.1rem;
-            align-items: center;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.64rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.4);
-        }
-
-        .uptime-legend-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .uptime-legend-swatch {
-            width: 10px;
-            height: 10px;
-            border-radius: 2px;
-            flex: 0 0 auto;
-        }
-
-        .uptime-legend-swatch.up { background: #3DDC97; }
-        .uptime-legend-swatch.degraded { background: #F5A623; }
-        .uptime-legend-swatch.down { background: #FF5C5C; }
-        .uptime-legend-swatch.no-data { background: rgba(255,255,255,0.08); }
 
     </style>
 </head>
@@ -645,11 +477,6 @@
                     <span class="tag">Self-hosted</span>
                     <h3 class="metallic-text">adolago.xyz</h3>
                     <p>This site. Served from svr-dmz (Debian 13) via Caddy reverse proxy and Cloudflare Tunnel. Privacy analytics with Plausible.</p>
-                    <div class="mini-status" aria-live="polite">
-                        <span class="status-dot" data-edge-status-dot></span>
-                        <span class="mini-status-text" data-edge-status-title>Edge: checking…</span>
-                        <span class="mini-status-text" data-edge-uptime-text></span>
-                    </div>
                 </div>
                 <div class="card">
                     <span class="tag">Self-hosted</span>
