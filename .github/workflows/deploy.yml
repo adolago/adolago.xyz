@@ -110,11 +110,10 @@ jobs:
           payload=/tmp/site-payload.tgz
           tmp_dir=""
           deploy_root="$SITE_ROOT"
-          wrapper_present=0
           cleanup_remote() {
             rm -f "$payload" 2>/dev/null || true
             if [ -n "$tmp_dir" ]; then
-              rm -rf "$tmp_dir" 2>/dev/null || true
+              sudo -n rm -rf "$tmp_dir" 2>/dev/null || true
             fi
           }
           trap cleanup_remote EXIT
@@ -122,7 +121,6 @@ jobs:
           # Use wrapper when present, then force a direct payload sync to the
           # deployed document root so stale artifacts cannot survive.
           if [ -e /usr/local/sbin/dmz-site-deploy ]; then
-            wrapper_present=1
             wrapper_out="$(sudo -n /usr/local/sbin/dmz-site-deploy "$SITE_NAME" < "$payload")"
             printf '%s\n' "$wrapper_out"
             wrapper_root="$(printf '%s\n' "$wrapper_out" | sed -n 's/.* to \(\/[^[:space:]]*\).*/\1/p' | tail -n1)"
@@ -133,23 +131,13 @@ jobs:
 
           tmp_dir="$(mktemp -d)"
           tar -xzf "$payload" -C "$tmp_dir"
-          if [ "$wrapper_present" -eq 1 ]; then
-            mkdir -p "$deploy_root"
-            rsync -a --delete \
-              --exclude '.git/' \
-              --exclude '.github/' \
-              --exclude '.gitignore' \
-              --exclude '*.example' \
-              "$tmp_dir/" "$deploy_root/"
-          else
-            sudo -n mkdir -p "$deploy_root"
-            sudo -n rsync -a --delete \
-              --exclude '.git/' \
-              --exclude '.github/' \
-              --exclude '.gitignore' \
-              --exclude '*.example' \
-              "$tmp_dir/" "$deploy_root/"
-          fi
+          sudo -n mkdir -p "$deploy_root"
+          sudo -n rsync -a --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.gitignore' \
+            --exclude '*.example' \
+            "$tmp_dir/" "$deploy_root/"
           echo "Payload synced to $deploy_root"
           REMOTE
 
