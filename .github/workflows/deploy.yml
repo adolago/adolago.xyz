@@ -11,7 +11,7 @@ on:
 #   SSH_HOSTNAME: ssh.your-domain.com
 #   DEPLOY_USER: deploy
 #   SITE_NAME: site identifier for dmz-site-deploy (default: adolago.xyz)
-#   SITE_ROOT: fallback document root if dmz-site-deploy is missing (default: /var/www/adolago)
+#   SITE_ROOT: document root for payload sync (default: /var/www/html)
 
 jobs:
   deploy:
@@ -21,7 +21,7 @@ jobs:
       SSH_HOSTNAME: ${{ vars.SSH_HOSTNAME || 'ssh.adolago.xyz' }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER || 'deploy' }}
       SITE_NAME: ${{ vars.SITE_NAME || 'adolago.xyz' }}
-      SITE_ROOT: ${{ vars.SITE_ROOT || '/var/www/adolago' }}
+      SITE_ROOT: ${{ vars.SITE_ROOT || '/var/www/html' }}
       CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
       CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
     steps:
@@ -109,6 +109,7 @@ jobs:
           ssh dmz-gateway env SITE_NAME="$SITE_NAME" SITE_ROOT="$SITE_ROOT" 'bash -seuo pipefail -s' <<'REMOTE'
           payload=/tmp/site-payload.tgz
           tmp_dir=""
+          deploy_root="$SITE_ROOT"
           cleanup_remote() {
             rm -f "$payload" 2>/dev/null || true
             if [ -n "$tmp_dir" ]; then
@@ -117,22 +118,27 @@ jobs:
           }
           trap cleanup_remote EXIT
 
-          # Use wrapper directly when present. Avoid `sudo test` because
-          # deploy users are often allowlisted for the wrapper only.
+          # Use wrapper when present, then force a direct payload sync to the
+          # deployed document root so stale artifacts cannot survive.
           if [ -e /usr/local/sbin/dmz-site-deploy ]; then
-            sudo -n /usr/local/sbin/dmz-site-deploy "$SITE_NAME" < "$payload"
-            exit 0
+            wrapper_out="$(sudo -n /usr/local/sbin/dmz-site-deploy "$SITE_NAME" < "$payload")"
+            printf '%s\n' "$wrapper_out"
+            wrapper_root="$(printf '%s\n' "$wrapper_out" | sed -n 's/.* to \(\/[^[:space:]]*\).*/\1/p' | tail -n1)"
+            if [ -n "$wrapper_root" ]; then
+              deploy_root="$wrapper_root"
+            fi
           fi
 
           tmp_dir="$(mktemp -d)"
           tar -xzf "$payload" -C "$tmp_dir"
-          sudo -n mkdir -p "$SITE_ROOT"
+          sudo -n mkdir -p "$deploy_root"
           sudo -n rsync -a --delete \
             --exclude '.git/' \
             --exclude '.github/' \
             --exclude '.gitignore' \
             --exclude '*.example' \
-            "$tmp_dir/" "$SITE_ROOT/"
+            "$tmp_dir/" "$deploy_root/"
+          echo "Payload synced to $deploy_root"
           REMOTE
 
           step_ok=1
@@ -146,3 +152,12 @@ jobs:
             sleep 2
           done
           echo "Site did not become reachable in time" >&2; exit 1
+
+      - name: Content check (removed sections)
+        run: |
+          page="$(curl -sf -L "https://$SITE_DOMAIN/?verify=$GITHUB_RUN_ID")"
+          if printf '%s\n' "$page" | grep -Eiq 'href="#homelab"|>Homelab<|>Network<|>Infrastructure<|>Observability<'; then
+            echo "Removed sections are still present in rendered homepage" >&2
+            exit 1
+          fi
+          echo "Content verified: removed sections are absent"
