@@ -16,36 +16,37 @@
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: -2;
-        pointer-events: auto;
+        z-index: -1;
+        pointer-events: none;
     `;
     document.body.insertBefore(canvas, document.body.firstChild);
 
     // Configuration
     const config = {
-        SIM_RESOLUTION: 128,
-        DYE_RESOLUTION: 512,
-        DENSITY_DISSIPATION: 0.5,        // Faster fade - more see-through smoke
-        VELOCITY_DISSIPATION: 0.95,      // Velocity fades, allowing spread
+        SIM_RESOLUTION: 192,
+        DYE_RESOLUTION: 1024,
+        DENSITY_DISSIPATION: 0.75,       // Dense at the source, transparent by the header
+        VELOCITY_DISSIPATION: 0.55,      // Preserve rolls without accumulating runaway speed
         PRESSURE: 0.3,                   // Low pressure - lets smoke spread naturally
         PRESSURE_ITERATIONS: 10,
-        CURL: 3.5,                        // Reduced turbulence
+        CURL: 16,                         // Broad rolling eddies instead of fine marbling
         SPLAT_RADIUS: 3.0,                // Moderate width (cursor interaction)
-        SMOKE_RADIUS: 2.6,                // Wider plume
-        SMOKE_FORCE: 26,                  // Gentler upward push
-        SPLAT_FORCE: 4000,
-        SHADING: false,
-        BACK_COLOR: { r: 5, g: 8, b: 15 },  // Very dark navy
+        SMOKE_RADIUS: 0.75,               // Compact jets that merge into distinct billows
+        SMOKE_FORCE: 14,                  // Continuous upward source impulse
+        SMOKE_SHEAR: 5,                   // Gentle cross-flow seeds rolling instabilities
+        SPLAT_FORCE: 2500,
+        SHADING: true,
+        BACK_COLOR: { r: 18, g: 18, b: 18 },  // Site background #121212
         BLOOM: true,
         BLOOM_ITERATIONS: 8,
         BLOOM_RESOLUTION: 256,
-        BLOOM_INTENSITY: 0.15,            // Subtle glow
+        BLOOM_INTENSITY: 0.06,            // Soft lift on the densest cores only
         BLOOM_THRESHOLD: 0.08,            // Higher threshold to reduce bloom
         BLOOM_SOFT_KNEE: 0.8,
         // Rising smoke buoyancy
-        SMOKE_BUOYANCY: 0.45,             // Gentler rise
-        // Dimmer smoke
-        SMOKE_COLOR: { r: 0.0011, g: 0.0018, b: 0.0032 },
+        SMOKE_BUOYANCY: 0.8,
+        // Dye density injected per splat; display ramp maps it to the vapor palette
+        SMOKE_COLOR: { r: 0.012, g: 0.013, b: 0.015 },
     };
 
     function pointerPrototype() {
@@ -58,7 +59,7 @@
         this.deltaY = 0;
         this.down = false;
         this.moved = false;
-        this.color = { r: 0.2, g: 0.35, b: 0.7 }; // Navy blue cursor interaction
+        this.color = { r: 0, g: 0, b: 0 }; // Cursor stirs velocity only, adds no dye
     }
 
     let pointers = [];
@@ -282,6 +283,12 @@
             return max(1.055 * pow(color, vec3(0.416666667)) - 0.055, vec3(0));
         }
 
+        float smokeDensity (vec2 uv) {
+            vec3 sampleColor = texture2D(uTexture, uv).rgb;
+            float sampleDepth = max(sampleColor.r, max(sampleColor.g, sampleColor.b));
+            return 1.0 - exp(-sampleDepth * 1.8);
+        }
+
         void main () {
             vec3 c = texture2D(uTexture, vUv).rgb;
 
@@ -290,24 +297,40 @@
                 c += bloom;
             #endif
 
+            // Beer-Lambert style transfer: dye accumulates past 1.0 near the
+            // source, so map optical depth to coverage instead of clamping
+            float depth = max(c.r, max(c.g, c.b));
+            float density = 1.0 - exp(-depth * 1.8);
+            // Cut faint accumulated haze and steepen billow boundaries so the
+            // plume keeps crisp rolling edges instead of dissolving into fog
+            density = smoothstep(0.025, 0.85, density);
+
+            // Cold vapor ramp: dark navy edges -> pale blue-gray core -> near-white peaks
+            vec3 vaporEdge = vec3(0.08, 0.12, 0.22);
+            vec3 vaporCore = vec3(0.65, 0.72, 0.82);
+            vec3 vaporHighlight = vec3(0.80, 0.85, 0.92);
+            vec3 col = mix(vaporEdge, vaporCore, density);
+            col = mix(col, vaporHighlight, pow(density, 2.5) * 0.5);
+
             #ifdef SHADING
-                vec3 lc = texture2D(uTexture, vL).rgb;
-                vec3 rc = texture2D(uTexture, vR).rgb;
-                vec3 tc = texture2D(uTexture, vT).rgb;
-                vec3 bc = texture2D(uTexture, vB).rgb;
+                float lD = smokeDensity(vL);
+                float rD = smokeDensity(vR);
+                float tD = smokeDensity(vT);
+                float bD = smokeDensity(vB);
 
-                float dx = length(rc) - length(lc);
-                float dy = length(tc) - length(bc);
-
-                vec3 n = normalize(vec3(dx, dy, length(texelSize)));
-                vec3 l = vec3(0.0, 0.0, 1.0);
-
-                float diffuse = clamp(dot(n, l) + 0.7, 0.7, 1.0);
-                c *= diffuse;
+                // Light from upper-left so billow tops catch light and
+                // undersides self-shadow - reads as volume, not flat mist
+                vec3 n = normalize(vec3(lD - rD, bD - tD, length(texelSize) * 120.0));
+                vec3 l = normalize(vec3(-0.35, 0.6, 0.7));
+                float diffuse = 0.65 + 0.5 * clamp(dot(n, l), 0.0, 1.0);
+                col *= diffuse;
             #endif
 
-            float a = max(c.r, max(c.g, c.b));
-            gl_FragColor = vec4(linearToGamma(c), a);
+            // Match the old backdrop's prominence: dense at the source, then
+            // smoothly quieter behind the hero copy and navigation.
+            float heightFade = pow(max(1.0 - vUv.y, 0.0), 0.7);
+            float alpha = density * 0.34 * heightFade;
+            gl_FragColor = vec4(linearToGamma(col) * alpha, alpha);
         }
     `;
 
@@ -803,9 +826,6 @@
 
     initFramebuffers();
 
-    // Hot air emission state
-    let emitAccumulator = 0;
-
     // Animation
     let lastUpdateTime = Date.now();
     let time = 0;
@@ -857,50 +877,47 @@
         });
     }
 
-    function clamp(value, min, max) {
-        return Math.min(max, Math.max(min, value));
-    }
-
     function getEmitterRange() {
-        const fallback = { start: 0.3, end: 0.7 };
-        const consoleEl = document.querySelector('.console');
-        if (!consoleEl) return fallback;
-
-        const rect = consoleEl.getBoundingClientRect();
-        const styles = window.getComputedStyle(consoleEl);
-        const padLeft = parseFloat(styles.paddingLeft) || 0;
-        const padRight = parseFloat(styles.paddingRight) || 0;
-        const width = canvas.clientWidth || window.innerWidth;
-        if (!width) return fallback;
-
-        const start = (rect.left + padLeft) / width;
-        const end = (rect.right - padRight) / width;
-        if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return fallback;
-
-        return {
-            start: clamp(start, 0.05, 0.95),
-            end: clamp(end, 0.05, 0.95)
-        };
+        // Fixed centered band matching the plume footprint of the old shader
+        return { start: 0.32, end: 0.68 };
     }
 
-    // Emit a wide band of smoke aligned to the console width
+    // Emit a centered band of smoke with per-splat shear and jitter so the
+    // rising column develops natural instabilities instead of a uniform sheet
     function emitSmoke(dt) {
         const { start, end } = getEmitterRange();
         const span = end - start;
-        const count = Math.max(4, Math.round(span / 0.06));
-        const intensity = Math.min(1, 6 / count);
+        const count = Math.max(3, Math.round(span / 0.09));
+        const emissionScale = Math.min(dt * 60, 1);
 
         for (let i = 0; i < count; i++) {
             const t = (i + 0.5) / count;
-            const drift = Math.sin(time * 0.6 + i) * 0.003;
+            // Short, out-of-phase pulses create separate puffs that roll into
+            // one another instead of a few oversized, continuously fed lobes.
+            const phase = time * 4.1 + i * 2.9;
+            const pulse = 0.5 + 0.5 * Math.sin(phase);
+            const drift = Math.sin(time * 0.7 + i * 2.1) * 0.008;
+            const puff = 0.18 + 0.82 * pulse * pulse;
+            const shear = Math.sin(time * 1.2 + i * 2.6) * config.SMOKE_SHEAR;
+            const liftPulse = 0.5 + 0.5 * Math.sin(time * 3.3 + i * 3.9);
+            const lift = config.SMOKE_FORCE * (0.35 + 0.85 * liftPulse);
+            const radius = config.SMOKE_RADIUS * (0.65 + 0.55 * pulse);
             const color = {
-                r: config.SMOKE_COLOR.r * intensity,
-                g: config.SMOKE_COLOR.g * intensity,
-                b: config.SMOKE_COLOR.b * intensity
+                r: config.SMOKE_COLOR.r * puff * emissionScale,
+                g: config.SMOKE_COLOR.g * puff * emissionScale,
+                b: config.SMOKE_COLOR.b * puff * emissionScale
             };
 
-            // Emission sits just below the bottom edge for a below-frame source
-            splat(start + span * t + drift, -0.02, 0, config.SMOKE_FORCE, color, config.SMOKE_RADIUS);
+            // Keep the source tight to the bottom edge so the machinery stays
+            // out of frame while newly emitted vapor is visible immediately.
+            splat(
+                start + span * t + drift,
+                0.008,
+                shear * emissionScale,
+                lift * emissionScale,
+                color,
+                radius
+            );
         }
     }
 
@@ -1104,39 +1121,44 @@
         return radius;
     }
 
-    // Event handlers - cursor only interaction
-    canvas.addEventListener('mousemove', e => {
-        let posX = scaleByPixelRatio(e.offsetX);
-        let posY = scaleByPixelRatio(e.offsetY);
+    // Event handlers - cursor only interaction. Listeners live on window
+    // because the canvas sits behind the page content (pointer-events: none)
+    window.addEventListener('mousemove', e => {
+        let posX = scaleByPixelRatio(e.clientX);
+        let posY = scaleByPixelRatio(e.clientY);
         let pointer = pointers[0];
         updatePointerMoveData(pointer, posX, posY);
     });
 
-    canvas.addEventListener('touchstart', e => {
-        e.preventDefault();
+    window.addEventListener('touchstart', e => {
         const touches = e.targetTouches;
         for (let i = 0; i < touches.length; i++) {
             if (i >= pointers.length)
                 pointers.push(new pointerPrototype());
-            let posX = scaleByPixelRatio(touches[i].pageX);
-            let posY = scaleByPixelRatio(touches[i].pageY);
+            let posX = scaleByPixelRatio(touches[i].clientX);
+            let posY = scaleByPixelRatio(touches[i].clientY);
             updatePointerMoveData(pointers[i], posX, posY);
         }
-    }, { passive: false });
+    }, { passive: true });
 
-    canvas.addEventListener('touchmove', e => {
-        e.preventDefault();
+    window.addEventListener('touchmove', e => {
         const touches = e.targetTouches;
         for (let i = 0; i < touches.length; i++) {
             let pointer = pointers[i];
             if (!pointer) continue;
-            let posX = scaleByPixelRatio(touches[i].pageX);
-            let posY = scaleByPixelRatio(touches[i].pageY);
+            let posX = scaleByPixelRatio(touches[i].clientX);
+            let posY = scaleByPixelRatio(touches[i].clientY);
             updatePointerMoveData(pointer, posX, posY);
         }
-    }, { passive: false });
+    }, { passive: true });
 
     function updatePointerMoveData(pointer, posX, posY) {
+        if (pointer.id === -1) {
+            // First event: seed previous position to avoid a huge initial delta
+            pointer.id = 0;
+            pointer.texcoordX = posX / canvas.width;
+            pointer.texcoordY = 1.0 - posY / canvas.height;
+        }
         pointer.prevTexcoordX = pointer.texcoordX;
         pointer.prevTexcoordY = pointer.texcoordY;
         pointer.texcoordX = posX / canvas.width;
@@ -1176,5 +1198,5 @@
     // Start animation
     update();
 
-    console.log('CFD Hot Air initialized - narrow plume source, subtle fading smoke');
+    console.log('CFD smoke initialized - dense billowing plume');
 })();
